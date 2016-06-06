@@ -5,8 +5,6 @@ class Vertex_User_Mentioned:
         self.first = None
         self.p = None
         self.left = None
-        self.right = None
-    def add(self, v):
         a = adj()
         a.n = v.n
         a.next = self.first
