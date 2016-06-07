@@ -140,13 +140,40 @@ class Int_Vertex_His_Her_Friend(Vertex_Friend):
     def less_than(self,other):
         return self.id < other.id
     def make_node(self,id, friend_id):
-        n = Int_Vertex_Friend()
+        n = Int_Vertex_His_Her_Friend()
         n.id = id
         n.friend_id = friend_id
         return n
     def print_node(self):
         print(self.id)
 
+
+        
+class Vertex_Mentioned_His_Her_Friend:
+    def __init__(self):
+        self.n = 0
+        self.id = 0
+        self.friend_id = 0
+        self.first = None
+        self.p = None
+        self.left = None
+        self.right = None
+
+class Int_Vertex_Mentioned_His_Her_Friend(Vertex_Mentioned_His_Her_Friend):
+    def __init__(self):
+        super().__init__()
+        self.id = 0
+    def less_than(self,other):
+        return self.id < other.id
+    def more_than(self,other):
+        return self.id > other.id    
+    def make_node(self,id):
+        n = Int_Vertex_Mentioned_His_Her_Friend()
+        n.id = id
+      #  n.friend_id = friend_id
+        return n
+    def print_node(self):
+        print(self.id)
 
 
 
@@ -227,6 +254,8 @@ bst_user_mentioned = BinarySearchTree()
 proto_user_mentioned = Int_Vertex_User_Mentioned()
 
 bst_his_her_friend = BinarySearchTree()
+bst_mentioned_his_her_friend = BinarySearchTree()
+proto_mentioned_his_her_friend = Int_Vertex_Mentioned_His_Her_Friend()
     
 def menu0():
 
@@ -737,24 +766,46 @@ def menu4():
             return 1
 
 
-
+def construct_mentioned_his_her_friend(bst_his_her_friend, bst_user_mentioned_id) :
+    if (bst_his_her_friend.right):
+        construct_mentioned_his_her_friend(bst_his_her_friend.right, bst_user_mentioned_id)
+    if bst_his_her_friend.friend_id == bst_user_mentioned_id :
+        bst_mentioned_his_her_friend.insert_mentioned(proto_mentioned_his_her_friend.make_node(bst_his_her_friend.id))
+    if (bst_his_her_friend.left):
+        construct_mentioned_his_her_friend(bst_his_her_friend.left, bst_user_mentioned_id)
 
 def find_user_mentioned_friend(bst_user_mentioned):
     if (bst_user_mentioned.right):
         find_user_mentioned_friend(bst_user_mentioned.right)
-    print(bst_user_mentioned.id)
-
-
-    
+    construct_mentioned_his_her_friend(bst_his_her_friend.root, bst_user_mentioned.id)
     if (bst_user_mentioned.left):
         find_user_mentioned_friend(bst_user_mentioned.left)
 
+
+def print_mentioned_his_her_friend(bst_mentioned_his_her_friend):
+    if bst_mentioned_his_her_friend == None :
+        print("트위터 친구 분이 계시지 않습니다.")
+        return 1
+    if (bst_mentioned_his_her_friend.right):
+        print_mentioned_his_her_friend(bst_mentioned_his_her_friend.right)
+    print(bst_mentioned_his_her_friend.id)
+    if (bst_mentioned_his_her_friend.left):
+        print_mentioned_his_her_friend(bst_mentioned_his_her_friend.left)
+
+def find_mentioned_his_her_friend_name(bst_mentioned_his_her_friend):
+    if (bst_mentioned_his_her_friend.right):
+        find_mentioned_his_her_friend_name(bst_mentioned_his_her_friend.right)
+    find_user_name(bst_user.root, bst_mentioned_his_her_friend)
+    if (bst_mentioned_his_her_friend.left):
+        find_mentioned_his_her_friend_name(bst_mentioned_his_her_friend.left)
         
 def menu5():
     bst_his_her_friend.__init__()
+    bst_mentioned_his_her_friend.__init__()
     proto_his_her_friend = Int_Vertex_His_Her_Friend()
+    proto_mentioned_his_her_friend = Int_Vertex_Mentioned_His_Her_Friend()
 
-    friend_file = open('friend.txt')
+    friend_file = open('friend01.txt')
     line_count = -1
     for line in friend_file:
         line_count += 1
@@ -769,6 +820,22 @@ def menu5():
                 print("Find users who tweeted a word")
                 return 1
     find_user_mentioned_friend(bst_user_mentioned.root)
+    absent = print_mentioned_his_her_friend(bst_mentioned_his_her_friend.root)
+
+    if absent != 1 :
+        print("\nname 도 확인하시려면 1번을 누르시고,")
+        print("메뉴 인터페이스로 돌아가시려면 2번을 누르세요")
+        print("입력하세요:")
+        name_check = input()
+        if name_check == "1":
+            find_mentioned_his_her_friend_name(bst_mentioned_his_her_friend.root)
+        else :
+            return 1
+
+    
+    # bst_mentioned_his_her_friend.print_tree()
+    
+    # bst_his_her_friend.print_tree()
      
 
 
