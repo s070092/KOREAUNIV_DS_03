@@ -5,6 +5,8 @@ class Vertex_User_Mentioned:
         self.first = None
         self.p = None
         self.left = None
+        self.right = None
+    def add(self, v):
         a = adj()
         a.n = v.n
         a.next = self.first
@@ -26,6 +28,8 @@ class Int_Vertex_User_Mentioned(Vertex_User_Mentioned):
         print(self.id)
 
         
+
+
 
 class Vertex_User:
     def __init__(self):
@@ -119,7 +123,34 @@ class Int_Vertex_Word(Vertex_Word):
 
 
         
+class Vertex_His_Her_Friend:
+    def __init__(self):
+        self.n = 0
+        self.id = 0
+        self.friend_id = 0
+        self.first = None
+        self.p = None
+        self.left = None
+        self.right = None
 
+class Int_Vertex_His_Her_Friend(Vertex_Friend):
+    def __init__(self):
+        super().__init__()
+        self.id = 0
+    def less_than(self,other):
+        return self.id < other.id
+    def make_node(self,id, friend_id):
+        n = Int_Vertex_Friend()
+        n.id = id
+        n.friend_id = friend_id
+        return n
+    def print_node(self):
+        print(self.id)
+
+
+
+
+        
 
 class BinarySearchTree:
     def __init__(self):
@@ -159,6 +190,9 @@ class BinarySearchTree:
             y.right = z
             
     def print_util(self, tree, level):
+        if self.root == None :
+            print("값이 없습니다.")
+            return 1
         if (tree.right):
             self.print_util(tree.right, level + 1)
         for i in range(level):
@@ -191,8 +225,16 @@ bst_friend = BinarySearchTree()
 bst_word = BinarySearchTree()
 bst_user_mentioned = BinarySearchTree()
 proto_user_mentioned = Int_Vertex_User_Mentioned()
+
+bst_his_her_friend = BinarySearchTree()
     
 def menu0():
+
+
+    bst_user.__init__()
+    bst_friend.__init__()
+    bst_word.__init__()
+    
     proto_user = Int_Vertex_User()
 
     user_file = open('user.txt')
@@ -608,38 +650,126 @@ class Adj_User:
 
 
 
-def find_user_name(bst_user, bst_word_id):
+def find_user_name2(bst_user, bst_word_id):
     if (bst_user.right):
         find_user_name(bst_user.right, bst_word_id)
     if bst_word_id == bst_user.id :
         print(bst_word_id, "\t", bst_user.name)        
     if (bst_user.left):
         find_user_name(bst_user.left, bst_word_id)
-        
 
+def find_user_name1(bst_user_mentioned_id):
+    if (bst_user_mentioned_id.right):
+        find_user_name1(bst_user_mentioned_id.right)
+        
+    print(bst_user_mentioned_id)
+
+def find_user_name(bst_user_mentioned, bst_user):
+    # print("888 ", bst_user_mentioned.id, bst_user.id)
+    if (bst_user.right):
+        find_user_name(bst_user_mentioned, bst_user.right)
+   # find_user_name1(bst_user_mentioned.id)
+   # print(bst_user_mentioned.id, bst_user.id)
+    if (bst_user_mentioned.id == bst_user.id):
+        print(bst_user_mentioned.id, bst_user.id)
+    if (bst_user.left):
+        find_user_name(bst_user_mentioned, bst_user.left)    
 
 
 def find_user_mentioned(bst_word, tweeted_word):
     if (bst_word.right):
         find_user_mentioned(bst_word.right, tweeted_word)
     if tweeted_word == bst_word.word:
-        bst_user_mentioned.insert_mentioned(proto_user_mentioned.make_node(bst_word.id))        
+       # find_user_name(bst_user.root, bst_word.id)
+       # print(bst_word.id, "\t", bst_word.word, "\t", bst_word.date)
+        bst_user_mentioned.insert_mentioned(proto_user_mentioned.make_node(bst_word.id))
+
+
+        
     if (bst_word.left):
         find_user_mentioned(bst_word.left, tweeted_word)
     return bst_word.id
 
 
+def print_user_mentioned(bst_user_mentioned):
+    if bst_user_mentioned == None :
+        print("이 word를 mention하신 분이 안 계십니다.")
+        return 1
+    if (bst_user_mentioned.right):
+        print_user_mentioned(bst_user_mentioned.right)
+    print(bst_user_mentioned.id)
+    if (bst_user_mentioned.left):
+        print_user_mentioned(bst_user_mentioned.left)
+
+
+
+def find_user_name(bst_user, bst_user_mentioned):
+    if bst_user.id == int(bst_user_mentioned.id) :
+        print(bst_user.id, bst_user.name)
+    elif bst_user.id > int(bst_user_mentioned.id) :
+        find_user_name(bst_user.left, bst_user_mentioned)
+    else :
+        find_user_name(bst_user.right, bst_user_mentioned)        
+
+def find_user_mentioned_name(bst_user_mentioned):
+    if (bst_user_mentioned.right):
+        find_user_mentioned_name(bst_user_mentioned.right)
+    find_user_name(bst_user.root, bst_user_mentioned)
+    if (bst_user_mentioned.left):
+        find_user_mentioned_name(bst_user_mentioned.left)
+        
+    
 def menu4():
-    adj_user = Adj_User()
+    bst_user_mentioned.__init__()
     print("Find users who tweeted a word")
     print("Input a word:")    
     tweeted_word = input()
     find_user_mentioned(bst_word.root, tweeted_word)
-    bst_user_mentioned.print_tree()
-    
+    absent = print_user_mentioned(bst_user_mentioned.root)
+    if absent != 1 :
+        print("\nname 도 확인하시려면 1번을 누르시고,")
+        print("메뉴 인터페이스로 돌아가시려면 2번을 누르세요")
+        print("입력하세요:")
+        name_check = input()
+        if name_check == "1":
+            find_user_mentioned_name(bst_user_mentioned.root)
+        else :
+            return 1
+
+
+
+
+def find_user_mentioned_friend(bst_user_mentioned):
+    if (bst_user_mentioned.right):
+        find_user_mentioned_friend(bst_user_mentioned.right)
+    print(bst_user_mentioned.id)
+
 
     
+    if (bst_user_mentioned.left):
+        find_user_mentioned_friend(bst_user_mentioned.left)
 
+        
+def menu5():
+    bst_his_her_friend.__init__()
+    proto_his_her_friend = Int_Vertex_His_Her_Friend()
+
+    friend_file = open('friend.txt')
+    line_count = -1
+    for line in friend_file:
+        line_count += 1
+ 
+        if line_count%3 == 0 :
+            temp_id = int(line)
+        elif line_count%3 == 1 :
+            temp_friend_id = int(line)
+            bst_his_her_friend.insert(proto_his_her_friend.make_node(temp_friend_id, temp_id))
+            if bst_user_mentioned.root == None :
+                print("4번 메뉴를 먼저 이용하셔야 5번 메뉴 자료가 구축됩니다.")
+                print("Find users who tweeted a word")
+                return 1
+    find_user_mentioned_friend(bst_user_mentioned.root)
+     
 
 
 
