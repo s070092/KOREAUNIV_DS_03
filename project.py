@@ -765,7 +765,6 @@ def menu4():
         else :
             return 1
 
-
 def construct_mentioned_his_her_friend(bst_his_her_friend, bst_user_mentioned_id) :
     if (bst_his_her_friend.right):
         construct_mentioned_his_her_friend(bst_his_her_friend.right, bst_user_mentioned_id)
