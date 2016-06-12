@@ -1,34 +1,3 @@
-class Vertex_User_Mentioned:
-    def __init__(self):
-        self.n = 0;
-        self.id = 0
-        self.first = None
-        self.p = None
-        self.left = None
-        self.right = None
-    def add(self, v):
-        a = adj()
-        a.n = v.n
-        a.next = self.first
-        self.first = a
-
-class Int_Vertex_User_Mentioned(Vertex_User_Mentioned):
-    def __init__(self):
-        super().__init__()
-        self.id = 0
-    def less_than(self,other):
-        return self.id < other.id
-    def more_than(self,other):
-        return self.id > other.id    
-    def make_node(self,id):
-        n = Int_Vertex_User_Mentioned()
-        n.id = id  
-        return n
-    def print_node(self):
-        print(self.id)
-
-        
-
 
 
 class Vertex_User:
@@ -111,6 +80,7 @@ class Int_Vertex_Word(Vertex_Word):
         self.word = 0
     def less_than(self,other):
         return self.word < other.word
+
     def make_node(self,id, date, word):
         n = Int_Vertex_Word()
         n.id = id
@@ -118,63 +88,41 @@ class Int_Vertex_Word(Vertex_Word):
         n.word = word.replace('\n', '')
         return n
     def print_node(self):
+     #   print(self.word, self.id, self.p.id, self.p.p.id)
         print(self.word)
 
 
-
-        
-class Vertex_His_Her_Friend:
+class ListNode:
     def __init__(self):
-        self.n = 0
-        self.id = 0
-        self.friend_id = 0
+        self.val = 0
+        self.next = None
+
+class List:
+    def __init__(self):
         self.first = None
-        self.p = None
-        self.left = None
-        self.right = None
-
-class Int_Vertex_His_Her_Friend(Vertex_Friend):
-    def __init__(self):
-        super().__init__()
-        self.id = 0
-    def less_than(self,other):
-        return self.id < other.id
-    def make_node(self,id, friend_id):
-        n = Int_Vertex_His_Her_Friend()
-        n.id = id
-        n.friend_id = friend_id
-        return n
-    def print_node(self):
-        print(self.id)
-
-
-        
-class Vertex_Mentioned_His_Her_Friend:
-    def __init__(self):
-        self.n = 0
-        self.id = 0
-        self.friend_id = 0
-        self.first = None
-        self.p = None
-        self.left = None
-        self.right = None
-
-class Int_Vertex_Mentioned_His_Her_Friend(Vertex_Mentioned_His_Her_Friend):
-    def __init__(self):
-        super().__init__()
-        self.id = 0
-    def less_than(self,other):
-        return self.id < other.id
-    def more_than(self,other):
-        return self.id > other.id    
-    def make_node(self,id):
-        n = Int_Vertex_Mentioned_His_Her_Friend()
-        n.id = id
-      #  n.friend_id = friend_id
-        return n
-    def print_node(self):
-        print(self.id)
-
+    def add(self, val):
+        p = self.first
+        while p is not None:
+            if p.val == val:
+                return None
+            p = p.next;
+        if p == None :
+            node = ListNode()
+            node.val = val;
+            if self.first is None:
+                self.first = node
+            else:
+                node.next = self.first
+                self.first = node
+        return None
+    def print(self):
+        p = self.first
+        if p == None :
+            return 1      
+        while p is not None:
+            print(p.val)
+            p = p.next;
+        return None
 
 
         
@@ -199,22 +147,37 @@ class BinarySearchTree:
         else:
             y.right = z
 
-    def insert_mentioned(self,z):
-        y = None
-        x = self.root
-        while x:
-            y = x
-            if z.less_than(x):
-                x = x.left
-            else:
-                x = x.right
-        z.p = y
-        if y == None:
-            self.root = z
-        elif z.less_than(y):
-            y.left = z
-        elif z.more_than(y):
-            y.right = z
+    def delete(self,z):
+        print("88888 ", self)
+        if z == None:
+            print("No data : delete 할 data 가 없습니다. (root == Null)")
+            return None
+        elif z.left == None:
+            self.transplant(z, z.right)
+        elif z.right == None:
+            self.transplant(z, z.left)
+        else:
+            y = self.minimum(z.right)
+            if y.p != z:
+                self.transplant(y, y.right)
+                y.right = z.right
+                y.right.p = y
+            self.transplant(z, y)
+            y.left = z.left
+            y.left.p = y
+    def minimum(self, x):
+        while x.left != None:
+            x = x.left
+        return x
+    def transplant(self, u, v):
+        if u.p == None:
+            self.root = v
+        elif u == u.p.left:
+            u.p.left = v
+        else:
+            u.p.right = v
+        if v != None:
+            v.p = u.p
             
     def print_util(self, tree, level):
         if self.root == None :
@@ -234,7 +197,7 @@ class BinarySearchTree:
 
 
 def menu_interface():
-    print("0. Read data files")
+    print("\n0. Read data files")
     print("1. display statistics")
     print("2. Top 5 most tweeted words")
     print("3. Top 5 most tweeted users")
@@ -250,13 +213,14 @@ def menu_interface():
 bst_user = BinarySearchTree()
 bst_friend = BinarySearchTree()
 bst_word = BinarySearchTree()
-bst_user_mentioned = BinarySearchTree()
-proto_user_mentioned = Int_Vertex_User_Mentioned()
 
-bst_his_her_friend = BinarySearchTree()
-bst_mentioned_his_her_friend = BinarySearchTree()
-proto_mentioned_his_her_friend = Int_Vertex_Mentioned_His_Her_Friend()
-    
+list_user_mentioned = List()
+list_friend = List()
+list_friend = List()
+list_word = List()
+list_word_friend = List()
+
+
 def menu0():
 
 
@@ -341,10 +305,6 @@ def menu0():
     print("Total friendship records:", friend_number)
     print("Total tweets:", word_number)
 
-    print("\n\n작업중.....\n")
-    statistics_friend(bst_user.root, bst_friend.root)
-    statistics_tweets(bst_user.root, bst_word.root)
-    print("작업 완료\n")    
     return bst_user, bst_friend, bst_word
 
 
@@ -365,7 +325,7 @@ def statistics_friend(bst_user, bst_friend):
         statistics_friend(bst_user, bst_friend.right)
     statistics_friend_user(bst_user, bst_friend)
     if (bst_friend.left):
-        statistics_friend(bst_user, bst_friend.left)        
+        statistics_friend(bst_user, bst_friend.left)
 
 def statistics_friend_cal(bst_user, total_number, user_number, min_friend, max_friend):
     if (bst_user.right) :
@@ -380,6 +340,23 @@ def statistics_friend_cal(bst_user, total_number, user_number, min_friend, max_f
         total_number, user_number, min_friend, max_friend = statistics_friend_cal(bst_user.left, total_number, user_number, min_friend, max_friend)
 
     return total_number, user_number, min_friend, max_friend
+        
+
+
+def statistics_tweets_user(bst_user, bst_word):
+    if (bst_user.right):
+        statistics_tweets_user(bst_user.right, bst_word)
+    if(bst_user.id == bst_word.id):
+        bst_user.tweet_count += 1
+    if (bst_user.left):
+        statistics_tweets_user(bst_user.left, bst_word)
+
+def statistics_tweets(bst_user, bst_word):
+    if (bst_word.right):
+        statistics_tweets(bst_user, bst_word.right)
+    statistics_tweets_user(bst_user, bst_word)    
+    if (bst_word.left):
+        statistics_tweets(bst_user, bst_word.left)         
 
 
 def statistics_tweets_cal(bst_user, total_tweet, tweet_count, min_tweet, max_tweet):
@@ -397,20 +374,7 @@ def statistics_tweets_cal(bst_user, total_tweet, tweet_count, min_tweet, max_twe
     return total_tweet, tweet_count, min_tweet, max_tweet
 
 
-def statistics_tweets_user(bst_user, bst_word):
-    if (bst_user.right):
-        statistics_tweets_user(bst_user.right, bst_word)
-    if(bst_user.id == bst_word.id):
-        bst_user.tweet_count += 1
-    if (bst_user.left):
-        statistics_tweets_user(bst_user.left, bst_word)
 
-def statistics_tweets(bst_user, bst_word):
-    if (bst_word.right):
-        statistics_tweets(bst_user, bst_word.right)
-    statistics_tweets_user(bst_user, bst_word)    
-    if (bst_word.left):
-        statistics_tweets(bst_user, bst_word.left) 
 
 
 
@@ -431,10 +395,16 @@ def menu1():
     min_tweet = 1E10
     max_tweet = 0
 
+
+    statistics_friend(bst_user.root, bst_friend.root)
+
+
     total_number, user_number, min_friend, max_friend = statistics_friend_cal(bst_user.root, total_number, user_number, min_friend, max_friend) 
     print("Average number of friends:", total_number/user_number)
     print("Minimum number of friends:", min_friend)
     print("Maximum number of friends:", max_friend, "\n")
+
+    statistics_tweets(bst_user.root, bst_word.root)
 
     total_tweet, tweet_count, min_tweet, max_tweet = statistics_tweets_cal(bst_user.root, total_tweet, tweet_count, min_tweet, max_tweet)
     print("Average tweets per user:", total_tweet/tweet_count)
@@ -663,179 +633,272 @@ def menu3():
 
 
 
-class Adj_User:
-    def __init__(self):
-        self.id = 0
-        self.name = ""
-        self.next = None
-        self.first = None
 
-        
-    def add(self, id, name):
-        self.id = id
-        self.name = name
-        self.next = self.first
+
     
 
+      
 
 
-def find_user_name2(bst_user, bst_word_id):
-    if (bst_user.right):
-        find_user_name(bst_user.right, bst_word_id)
-    if bst_word_id == bst_user.id :
-        print(bst_word_id, "\t", bst_user.name)        
-    if (bst_user.left):
-        find_user_name(bst_user.left, bst_word_id)
 
-def find_user_name1(bst_user_mentioned_id):
-    if (bst_user_mentioned_id.right):
-        find_user_name1(bst_user_mentioned_id.right)
+def find_user_name(bst_user, list_user_mentioned) :
+    if bst_user == None :
+        return None
+    elif bst_user.id == list_user_mentioned.val :
+        print(bst_user.id, "\t", bst_user.name, "\t", bst_user.date)
+
+
+    elif bst_user.id < list_user_mentioned.val :
+        find_user_name(bst_user.right, list_user_mentioned)
         
-    print(bst_user_mentioned_id)
-
-def find_user_name(bst_user_mentioned, bst_user):
-    # print("888 ", bst_user_mentioned.id, bst_user.id)
-    if (bst_user.right):
-        find_user_name(bst_user_mentioned, bst_user.right)
-   # find_user_name1(bst_user_mentioned.id)
-   # print(bst_user_mentioned.id, bst_user.id)
-    if (bst_user_mentioned.id == bst_user.id):
-        print(bst_user_mentioned.id, bst_user.id)
-    if (bst_user.left):
-        find_user_name(bst_user_mentioned, bst_user.left)    
-
-
+    elif bst_user.id > list_user_mentioned.val :
+        find_user_name(bst_user.left, list_user_mentioned)
+    
 def find_user_mentioned(bst_word, tweeted_word):
-    if (bst_word.right):
-        find_user_mentioned(bst_word.right, tweeted_word)
-    if tweeted_word == bst_word.word:
-       # find_user_name(bst_user.root, bst_word.id)
-       # print(bst_word.id, "\t", bst_word.word, "\t", bst_word.date)
-        bst_user_mentioned.insert_mentioned(proto_user_mentioned.make_node(bst_word.id))
-
-
-        
-    if (bst_word.left):
-        find_user_mentioned(bst_word.left, tweeted_word)
-    return bst_word.id
-
-
-def print_user_mentioned(bst_user_mentioned):
-    if bst_user_mentioned == None :
-        print("이 word를 mention하신 분이 안 계십니다.")
+    if bst_word == None :
         return 1
-    if (bst_user_mentioned.right):
-        print_user_mentioned(bst_user_mentioned.right)
-    print(bst_user_mentioned.id)
-    if (bst_user_mentioned.left):
-        print_user_mentioned(bst_user_mentioned.left)
+    if bst_word.word < tweeted_word :
+        find_user_mentioned(bst_word.right, tweeted_word) 
+    elif bst_word.word == tweeted_word :
+        list_user_mentioned.add(bst_word.id)
+        find_user_mentioned(bst_word.right, tweeted_word)            
+    elif bst_word.word > tweeted_word :
+        find_user_mentioned(bst_word.left, tweeted_word)
+
+def find_list_user_name(list_user_mentioned) :
+    if list_user_mentioned == None :
+        return None
+    find_user_name(bst_user.root, list_user_mentioned)
+    find_list_user_name(list_user_mentioned.next)
 
 
 
-def find_user_name(bst_user, bst_user_mentioned):
-    if bst_user.id == int(bst_user_mentioned.id) :
-        print(bst_user.id, bst_user.name)
-    elif bst_user.id > int(bst_user_mentioned.id) :
-        find_user_name(bst_user.left, bst_user_mentioned)
-    else :
-        find_user_name(bst_user.right, bst_user_mentioned)        
-
-def find_user_mentioned_name(bst_user_mentioned):
-    if (bst_user_mentioned.right):
-        find_user_mentioned_name(bst_user_mentioned.right)
-    find_user_name(bst_user.root, bst_user_mentioned)
-    if (bst_user_mentioned.left):
-        find_user_mentioned_name(bst_user_mentioned.left)
-        
     
 def menu4():
-    bst_user_mentioned.__init__()
-    print("Find users who tweeted a word")
+
+    list_user_mentioned.__init__()
+    print("Find users who tweeted a word (e.g., '연세대')")
     print("Input a word:")    
     tweeted_word = input()
     find_user_mentioned(bst_word.root, tweeted_word)
-    absent = print_user_mentioned(bst_user_mentioned.root)
+    
+    absent = list_user_mentioned.print()
     if absent != 1 :
-        print("\nname 도 확인하시려면 1번을 누르시고,")
+        print("\nname, 가입일시도 확인하시려면 1번을 누르시고,")
         print("메뉴 인터페이스로 돌아가시려면 2번을 누르세요")
         print("입력하세요:")
         name_check = input()
         if name_check == "1":
-            find_user_mentioned_name(bst_user_mentioned.root)
+            find_list_user_name(list_user_mentioned.first)
+            return 0
         else :
             return 1
 
-def construct_mentioned_his_her_friend(bst_his_her_friend, bst_user_mentioned_id) :
-    if (bst_his_her_friend.right):
-        construct_mentioned_his_her_friend(bst_his_her_friend.right, bst_user_mentioned_id)
-    if bst_his_her_friend.friend_id == bst_user_mentioned_id :
-        bst_mentioned_his_her_friend.insert_mentioned(proto_mentioned_his_her_friend.make_node(bst_his_her_friend.id))
-    if (bst_his_her_friend.left):
-        construct_mentioned_his_her_friend(bst_his_her_friend.left, bst_user_mentioned_id)
+def find_list_user_friend(bst_friend, list_user_mentioned) :
 
-def find_user_mentioned_friend(bst_user_mentioned):
-    if (bst_user_mentioned.right):
-        find_user_mentioned_friend(bst_user_mentioned.right)
-    construct_mentioned_his_her_friend(bst_his_her_friend.root, bst_user_mentioned.id)
-    if (bst_user_mentioned.left):
-        find_user_mentioned_friend(bst_user_mentioned.left)
+    if bst_friend == None :
+        return None
+    elif bst_friend.id < list_user_mentioned.val :
+        find_list_user_friend(bst_friend.right, list_user_mentioned)
+    elif bst_friend.id == list_user_mentioned.val :
+        list_friend.add(bst_friend.friend_id)
+        find_list_user_friend(bst_friend.right, list_user_mentioned)
+    elif bst_friend.id > list_user_mentioned.val :
+        find_list_user_friend(bst_friend.left, list_user_mentioned)
+
+def find_user_friend(list_user_mentioned) :
+    while list_user_mentioned != None :
+        find_list_user_friend(bst_friend.root, list_user_mentioned)
+        list_user_mentioned = list_user_mentioned.next
 
 
-def print_mentioned_his_her_friend(bst_mentioned_his_her_friend):
-    if bst_mentioned_his_her_friend == None :
-        print("트위터 친구 분이 계시지 않습니다.")
-        return 1
-    if (bst_mentioned_his_her_friend.right):
-        print_mentioned_his_her_friend(bst_mentioned_his_her_friend.right)
-    print(bst_mentioned_his_her_friend.id)
-    if (bst_mentioned_his_her_friend.left):
-        print_mentioned_his_her_friend(bst_mentioned_his_her_friend.left)
 
-def find_mentioned_his_her_friend_name(bst_mentioned_his_her_friend):
-    if (bst_mentioned_his_her_friend.right):
-        find_mentioned_his_her_friend_name(bst_mentioned_his_her_friend.right)
-    find_user_name(bst_user.root, bst_mentioned_his_her_friend)
-    if (bst_mentioned_his_her_friend.left):
-        find_mentioned_his_her_friend_name(bst_mentioned_his_her_friend.left)
+
+
+
+def find_friend_name(bst_user, list_friend_id) :
+    if bst_user == None :
+        return None
+    if bst_user.id == list_friend_id :
+        print(bst_user.id, "\t", bst_user.name, "\t", bst_user.date)
+
+
+    elif bst_user.id < list_friend_id :
+        find_friend_name(bst_user.right, list_friend_id)
         
-def menu5():
-    bst_his_her_friend.__init__()
-    bst_mentioned_his_her_friend.__init__()
-    proto_his_her_friend = Int_Vertex_His_Her_Friend()
-    proto_mentioned_his_her_friend = Int_Vertex_Mentioned_His_Her_Friend()
+    elif bst_user.id > list_friend_id :
+        find_friend_name(bst_user.left, list_friend_id)
 
-    friend_file = open('friend01.txt')
-    line_count = -1
-    for line in friend_file:
-        line_count += 1
- 
-        if line_count%3 == 0 :
-            temp_id = int(line)
-        elif line_count%3 == 1 :
-            temp_friend_id = int(line)
-            bst_his_her_friend.insert(proto_his_her_friend.make_node(temp_friend_id, temp_id))
-            if bst_user_mentioned.root == None :
-                print("4번 메뉴를 먼저 이용하셔야 5번 메뉴 자료가 구축됩니다.")
-                print("Find users who tweeted a word")
-                return 1
-    find_user_mentioned_friend(bst_user_mentioned.root)
-    absent = print_mentioned_his_her_friend(bst_mentioned_his_her_friend.root)
+        
+def find_list_friend_name(list_friend) :
+    if list_friend == None :
+        return None
+    find_friend_name(bst_user.root, list_friend.val)
+    find_list_friend_name(list_friend.next)
 
+
+def menu5() :
+    list_friend.__init__()
+
+    find_user_friend(list_user_mentioned.first)
+
+    absent = list_friend.print()
     if absent != 1 :
-        print("\nname 도 확인하시려면 1번을 누르시고,")
+        print("\nname, 가입일시도 확인하시려면 1번을 누르시고,")
         print("메뉴 인터페이스로 돌아가시려면 2번을 누르세요")
         print("입력하세요:")
         name_check = input()
         if name_check == "1":
-            find_mentioned_his_her_friend_name(bst_mentioned_his_her_friend.root)
+            find_list_friend_name(list_friend.first)
+            return 0
         else :
             return 1
+    else :
+        print("친구분이 계시지 않습니다. 4번 메뉴를 실행하셨는지 확인하세요.")
+        return 0
+              
 
+
+
+
+
+
+def delete_node(node_delete) :
+    print("7      ", node_delete.word, node_delete.id, node_delete.date, node_delete)    
+    bst_word.delete(node_delete)
+
+def delete_word(bst_word, tweeted_word):
     
-    # bst_mentioned_his_her_friend.print_tree()
+  #  if bst_word.id == 436685991 :
+  #      print("77 ", bst_word.word, bst_word.id, bst_word.date)
+        
+    if bst_word == None :
+        return None
+        
+    if bst_word.word < tweeted_word :
+        if bst_word.right == None :
+            delete_word(bst_word.left, tweeted_word)
+        else :
+            delete_word(bst_word.right, tweeted_word)
+
+    elif bst_word.word == tweeted_word :
+
+        list_word.add(bst_word.id)
+        node_delete = bst_word    
+        delete_node(node_delete)
+
+        if bst_word.right == None :
+            delete_word(bst_word.left, tweeted_word)
+        else :
+            print("right ", bst_word.right.id, bst_word.right.word)
+            delete_word(bst_word.right, tweeted_word)   
+        
+    elif bst_word.word > tweeted_word :
+        if bst_word.left == None :
+            delete_word(bst_word.right, tweeted_word)
+        else :
+            delete_word(bst_word.left, tweeted_word)
+        
+
+def menu6():
+    list_word.__init__()
+    print("Delete all mentions of a word")
+    print("Input a word:")
+    tweeted_word = input()
     
-    # bst_his_her_friend.print_tree()
-     
+    delete_word(bst_word.root, tweeted_word)
+    print("complete")
+
+    list_word.print()
+  #  bst_word.print_tree()
+    
+
+def delete_list_user(node_delete_user):
+    bst_user.delete(node_delete_user)
+
+def delete_user(bst_user, list_word):
+    if bst_user == None :
+        return 0
+    if bst_user.id < list_word.val :
+        delete_user(bst_user.right, list_word)
+    elif bst_user.id == list_word.val :
+        list_word_friend.add(bst_user.id)
+        node_delete_user = bst_user
+        delete_list_user(node_delete_user)
+    elif bst_user.id > list_word.val :
+        delete_user(bst_user.left, list_word)
+        
+def delete_list_word(list_word):
+    if list_word != None :
+        delete_user(bst_user.root, list_word)
+        delete_list_word(list_word.next)
+        
+
+def delete_list_friend_id(node_delete_friend):
+    bst_friend.delete(node_delete_friend)
+
+def delete_friend_id(bst_friend, list_word_friend):
+    if bst_friend == None :
+        return 0
+    if bst_friend.id < list_word_friend.val :
+        delete_friend_id(bst_friend.right, list_word_friend)
+    elif bst_friend.id == list_word_friend.val :
+        node_delete_friend = bst_friend
+        delete_list_friend_id(node_delete_friend)
+
+        if bst_friend.right == None :
+            delete_friend_id(bst_friend.left, list_word_friend)  
+        if bst_friend.left == None :
+            delete_friend_id(bst_friend.right, list_word_friend)
+
+        
+    elif bst_friend.id > list_word_friend.val :
+        delete_friend_id(bst_friend.left, list_word_friend)
+
+
+
+
+
+
+        
+        
+
+def delete_friend(list_word_friend):
+    if list_word_friend != None :
+        delete_friend_id(bst_friend.root, list_word_friend)
+        delete_friend(list_word_friend.next)
+
+def delete_list_friend_friendid(node_delete_friend):
+    bst_friend.delete(node_delete_friend)
+
+
+def delete_friend_id(bst_friend, list_word_friend):
+    if(bst_friend.right):
+        delete_friend_id(bst_friend.right, list_word_friend)
+    
+    if bst_friend.friend_id == list_word_friend.val :
+        node_delete_friend = bst_friend
+        delete_list_friend_friendid(node_delete_friend)    
+    if(bst_friend.left):
+        delete_friend_id(bst_friend.left, list_word_friend)
+
+
+
+def delete_friendid(list_word_friend):
+    if list_word_friend != None :
+        delete_friendid(list_word_friend.next)
+        
+def menu7():
+    list_word_friend.__init__()    
+    print("Delete all users who mentioned a word")
+    delete_list_word(list_word.first)
+    print("Complete.\n")
+    print("Deleting (the id in the friend tree == the id in the user tree)...")
+    delete_friend(list_word_friend.first)
+    print("Complete.\n")
+    print("Deleting (the friend_id in the friend tree == the id in the user tree)...")
+    delete_friendid(list_word_friend.first)    
+    print("Complete.\n")
 
 
 
@@ -845,6 +908,7 @@ def main():
         menu_interface()
         menu_input = input()
         print(menu_input + "번을 선택하셨습니다.\n")
+        menu_flag = 0
 
         if menu_input == "0":
             menu0()
@@ -855,9 +919,9 @@ def main():
         elif menu_input == "3":
             menu3()
         elif menu_input == "4":
-            menu4()
+            menu_flag = menu4()
         elif menu_input == "5":
-            menu5()
+            menu_flag = menu5()
         elif menu_input == "6":
             menu6()
         elif menu_input == "7":
@@ -869,8 +933,11 @@ def main():
         elif menu_input == "99":
             break
 
+        if menu_flag != 0 :
+            continue
 
-        print("\n메뉴 인터페이스로 돌아가시려면 엔터 키를 누르세요\n")
+
+        print("\n메뉴 인터페이스로 복귀하시려면 엔터 키를 누르세요")
         input()
 
         
