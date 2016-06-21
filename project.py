@@ -1,4 +1,175 @@
 
+class Queue:
+    def __init__(self):
+        self.front = 0
+        self.rear = 0
+        self.sz = 0
+        self.buf = []
+    def create_queue(self,sz):
+        self.sz = sz
+        self.buf = list(range(sz))  # malloc(sizeof(int)*sz)
+    def enqueue(self,val):
+        self.buf[self.rear] = val
+        self.rear = (self.rear + 1) % self.sz
+    def dequeue(self):
+        res = self.buf[self.front]
+        self.front = (self.front + 1) % self.sz
+        return res
+    def is_empty(self):
+        return self.front == self.rear
+
+def print_vertex(vertices,n):
+    print (vertices[n].name, end=' ')
+    print (vertices[n].color, end=' ')
+    print (vertices[n].parent, end=' ')
+    print (vertices[n].d, end=':')
+    p = vertices[n].first
+    while p:
+        print (vertices[p.n].name, end = ' ')
+        p = p.next
+    print('')
+
+def g_transpose(vertices, vertices1):
+    for i in range(len(vertices1)):
+        vertices1[i].first = None
+    for v in vertices:
+        p = v.first
+        while p:
+            vertices1[p.n].add(v)
+            p = p.next
+
+class DepthFirstSearch:
+    def __init__(self):
+        self.time = 0;
+        self.vertices = None
+    def set_vertices(self,vertices):
+        self.vertices = vertices
+        for i in range(len(self.vertices)):
+            self.vertices[i].n = i
+    def dfs(self):
+        for u in self.vertices:
+            u.color = WHITE
+            u.parent = -1
+        self.time = 0
+        for u in self.vertices:
+            if u.color == WHITE:
+                self.dfs_visit(u)
+    def dfs_visit(self, u):
+        self.time = self.time + 1
+        u.d = self.time
+        u.color = GRAY
+        v = u.first
+        while v:
+            if self.vertices[v.n].color == WHITE:
+                self.vertices[v.n].parent = u.n
+                self.dfs_visit(self.vertices[v.n])
+            v = v.next;
+        u.color = BLACK
+        self.time = self.time + 1
+        u.f = self.time
+
+    def print_scc(self, u):
+        print(u.name, end=" ")
+        vset = self.vertices
+        if u.parent >= 0:
+            self.print_scc(vset[u.parent])
+        
+    def scc_find(self, u):
+        u.color = GRAY
+        v = u.first
+        found = False
+        while v:
+            if self.vertices[v.n].color == WHITE:
+                found = True
+                self.vertices[v.n].parent = u.n
+                self.scc_find(self.vertices[v.n])
+            v = v.next;
+        if not found:
+            print("SCC:", end=" ")
+            self.print_scc(u)
+            print ("")
+        u.color = BLACK
+        
+    def print_vertex(self,n):
+        print (self.vertices[n].name, end=' ')
+        print (self.vertices[n].color, end=' ')
+        print (self.vertices[n].parent, end=' ')
+        print (self.vertices[n].d, end=' ')
+        print (self.vertices[n].f, end=':')
+        p = self.vertices[n].first
+        while p:
+            print (self.vertices[p.n].name, end = ' ')
+            p = p.next
+        print('')
+    def print_vertices(self):
+        for i in range(len(self.vertices)):
+            self.print_vertex(i)
+    def transpose(self):
+        vertices1 = []
+        for v in self.vertices:
+            v1 = Int_Vertex_Friend(v.name)
+            v1.copy(v)
+            vertices1.append(v1)
+        g_transpose(self.vertices,vertices1)
+        self.set_vertices(vertices1)
+
+    def left(self,n):
+        return 2*n+1
+
+    def right(self,n):
+        return 2*n+2
+
+    def heapify(self,A,i,heapsize):
+        vset = self.vertices
+        l = self.left(i)
+        r = self.right(i)
+        if l < heapsize and vset[A[l]].f < vset[A[i]].f:
+            largest = l
+        else:
+            largest = i
+        if r < heapsize and vset[A[r]].f < vset[A[largest]].f:
+            largest = r
+        if largest != i:
+            A[i],A[largest] = A[largest],A[i]
+            self.heapify(A,largest,heapsize)
+
+    def buildheap(self,A):
+        for i in range(len(A)//2 + 1,0,-1):
+            self.heapify(A,i-1,len(A))
+
+    def heapsort(self,A):
+        self.buildheap(A)
+        for i in range(len(A),1,-1):
+            A[i-1],A[0] = A[0],A[i-1]
+            self.heapify(A,0,i - 1)
+        
+    def sort_by_f(self):
+        vset = self.vertices
+        sorted_indices = list(range(len(vset)))
+        self.heapsort(sorted_indices)
+        return sorted_indices
+    
+    def scc(self):
+        self.dfs()
+        self.print_vertices()
+        self.transpose()
+        sorted = self.sort_by_f()
+        vset = self.vertices
+        for v in vset:
+            v.color = WHITE
+            v.parent = -1
+        for n in sorted:
+            if self.vertices[n].color == WHITE:
+                self.scc_find(vset[n])
+
+class Adj:
+    def __init__(self):
+        self.n = 0
+        self.next = None
+
+
+
+
 
 class Vertex_User:
     def __init__(self):
@@ -14,7 +185,7 @@ class Vertex_User:
         self.left = None
         self.right = None
     def add(self, v):
-        a = adj()
+        a = Adj()
         a.n = v.n
         a.next = self.first
         self.first = a
@@ -35,8 +206,18 @@ class Int_Vertex_User(Vertex_User):
         print(self.id)
 
 
+
+WHITE = 0
+GRAY = 1
+BLACK = 2
+
+
+        
 class Vertex_Friend:
-    def __init__(self):
+    def __init__(self, name):
+        self.color = WHITE
+        self.parent = -1
+        self.name = name        
         self.n = 0
         self.id = 0
         self.friend_id = 0
@@ -44,20 +225,38 @@ class Vertex_Friend:
         self.p = None
         self.left = None
         self.right = None
+    def add(self, v):
+        a = Adj()
+        a.n = v.n
+        a.next = self.first
+        self.first = a
+    def copy(self, other):
+        self.color = other.color
+        self.parent = other.parent
+        self.name = other.name
+        self.n = other.n
+        self.first = other.first        
+        
 
 class Int_Vertex_Friend(Vertex_Friend):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name):
+        super().__init__(name)
         self.id = 0
+        self.d = 0
+        self.f = 0        
     def less_than(self,other):
         return self.id < other.id
     def make_node(self,id, friend_id):
-        n = Int_Vertex_Friend()
+        n = Int_Vertex_Friend("")
         n.id = id
         n.friend_id = friend_id
         return n
     def print_node(self):
         print(self.id)
+    def copy(self, other):
+        super().copy(other)
+        self.d = other.d
+        self.f = other.f        
         
 
 
@@ -221,6 +420,7 @@ list_word = List()
 list_word_friend = List()
 
 
+
 def menu0():
 
 
@@ -231,6 +431,7 @@ def menu0():
     proto_user = Int_Vertex_User()
 
     user_file = open('user.txt')
+    global user_number
     user_number = 0
 
     line_count = 1
@@ -253,9 +454,10 @@ def menu0():
             bst_user.insert(proto_user.make_node(temp_id, temp_date.replace('\n', ''), temp_name.replace('\n', '')))
 
 
-    proto_friend = Int_Vertex_Friend()
+    proto_friend = Int_Vertex_Friend("")
 
     friend_file = open('friend.txt')
+    global friend_number
     friend_number = 0
 
     line_count = 1
@@ -900,6 +1102,93 @@ def menu7():
     delete_friendid(list_word_friend.first)    
     print("Complete.\n")
 
+
+# global array_count8
+# array_count8 = 0
+
+
+        
+
+
+
+array_count_friend_id = 0
+
+def array_init7(bst_friend):
+    global array_count
+    if (bst_friend.right):
+        array_init(bst_friend.right)
+    dup_check = 0
+    for i in range(len(vertices_friend)):
+        print("88 ", i)
+        if vertices_friend[array_count-1] == None :
+            print("88888")
+            continue
+        if vertices_friend[array_count].name == bst_friend.id :
+            print("7 ", bst_friend.id )
+    vertices_friend[array_count] = Int_Vertex_Friend(bst_friend.id)
+    array_count += 1
+    if (bst_friend.left):
+        array_init(bst_friend.left)
+
+
+def array_init_friend_id(bst_friend):
+    global array_count_friend_id
+    if (bst_friend.right):
+        array_init_friend_id(bst_friend.right)
+
+    vertices_friend_friend_id[array_count_friend_id] = Int_Vertex_Friend(bst_friend.friend_id)
+    array_count_friend_id += 1
+   # print("78   ", array_count_friend_id, vertices_friend_friend_id[array_count_friend_id-1].name)    
+    if (bst_friend.left):
+        array_init_friend_id(bst_friend.left)
+        
+
+def vertices_add(bst_friend, vertices_user):
+    if (bst_friend.right):
+        vertices_add(bst_friend.right, vertices_user)
+        
+    for i in range(len(vertices_user)):
+        if(bst_friend.id == vertices_user[i].id):
+            for j in range(len(vertices_user)):
+                if(bst_friend.friend_id == vertices_user[j].id):
+                    vertices_user[i].add(vertices_user[j])
+
+    if (bst_friend.left):
+        vertices_add(bst_friend.left, vertices_user)
+
+
+
+def array_init(bst_user):
+    global array_count8
+    if (bst_user.right):
+        array_init(bst_user.right)
+
+    vertices_user[array_count8] = bst_user
+    array_count8 = array_count8+1
+    if (bst_user.left):
+        array_init(bst_user.left)
+        
+
+def menu8():
+    print("Find strongly connected components")
+    global array_count8
+    array_count8 = 0
+
+    global vertices_user
+
+
+    vertices_user = [None]*user_number
+    
+    array_init(bst_user.root)
+    DFS = DepthFirstSearch()
+    DFS.set_vertices(vertices_user)
+
+
+    vertices_add(bst_friend.root, vertices_user)
+
+
+    DFS.scc()
+    DFS.print_vertices()
 
 
     
