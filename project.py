@@ -1164,6 +1164,7 @@ def array_init(bst_user):
         array_init(bst_user.right)
 
     vertices_user[array_count8] = bst_user
+    vertices_user[array_count8].n = array_count8
     array_count8 = array_count8+1
     if (bst_user.left):
         array_init(bst_user.left)
@@ -1187,6 +1188,7 @@ def menu8():
     vertices_add(bst_friend.root, vertices_user)
 
 
+  #  DFS.dfs()
     DFS.scc()
     DFS.print_vertices()
 
