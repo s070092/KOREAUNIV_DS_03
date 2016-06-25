@@ -1,7 +1,136 @@
-import sys
+# 자료구조 프로젝트
+#
+# user.text, friend.txt, word.txt 파일에서 데이터를 읽어와서
+# 3개의 Red-Black Tree를 구축합니다. (rbt_user, rbt_friend, rbt_word)
+#
 
-INFTY = 1E10
-sys.setrecursionlimit(10000)
+
+
+import sys
+sys.setrecursionlimit(100000)      # 용량이 큰 파일을 처리하는 경우 "maximum recursion depth exeeed" 오류를 예방하기 위해 recursion limit을 100,000 으로 설정
+
+class Vertex_User:                 # User tree의 vertex 를 구성
+    def __init__(self):            # 초기화
+        self.n = 0;
+        self.id = 0                # id를 0으로 초기화
+        self.date = ""             # date를 공백으로 초기화
+        self.name = ""             # name을 공백으로 초기화
+        self.user_count = 0
+        self.friend_count = 0
+        self.tweet_count = 0
+        self.first = None
+        self.p = None
+        self.left = None
+        self.right = None
+        self.red = False           # Red-Black Tree에서 color 를 Black으로 초기화
+    def add(self, v):              # Vertex 추가 및 연결
+        a = Adj()
+        a.n = v.n
+        a.next = self.first
+        self.first = a
+    def copy(self, other):          # Vertex 복사
+        self.parent = other.parent
+        self.name = other.name
+        self.n = other.n
+        self.first = other.first        
+        
+
+class Int_Vertex_User(Vertex_User):  # User tree의 vertex 내용을 구성
+    def __init__(self):              # 초기화
+        super().__init__()
+        self.id = 0
+    def less_than(self,other):
+        return self.id < other.id
+    def make_node(self,id, date, name):  # Vertex 노드를 생성
+        n = Int_Vertex_User()
+        n.id = id
+        n.date = date.replace('\n', '')  # txt 파일에 있는 '\n' 문자를 치환
+        n.name = name.replace('\n', '')    
+        return n
+    def print_node(self):
+        print(self.id)
+
+
+class Vertex_Friend:        # Friend tree 의 Vetext를 구성
+    def __init__(self, name): # 초기화
+        self.color = WHITE
+        self.parent = -1
+        self.name = name        
+        self.n = 0
+        self.id = 0
+        self.friend_id = 0
+        self.first = None
+        self.p = None
+        self.left = None
+        self.right = None
+        self.red = False         # Red-Black Tree에서 color 를 Black으로 초기화
+    def add(self, v):            # Vertex 추가 및 연결
+        a = Adj()
+        a.n = v.n
+        a.next = self.first
+        self.first = a
+    def copy(self, other):           # Vertex 복사
+        self.color = other.color
+        self.parent = other.parent
+        self.name = other.name
+        self.n = other.n
+        self.first = other.first        
+        
+
+class Int_Vertex_Friend(Vertex_Friend):   # Friend tree의 vertex 내용을 구성
+    def __init__(self, name):
+        super().__init__(name)
+        self.id = 0
+        self.d = 0
+        self.f = 0        
+    def less_than(self,other):
+        return self.id < other.id
+    def make_node(self,id, friend_id):    # Vertex 노드를 생성
+        n = Int_Vertex_Friend("")
+        n.id = id
+        n.friend_id = friend_id
+        return n
+    def print_node(self):          # 노드의 내용을 출력
+        print(self.id)
+    def copy(self, other):          # Vertex 복사
+        super().copy(other)
+        self.d = other.d
+        self.f = other.f        
+        
+
+
+class Vertex_Word:               # Word tree의 vertex를 구성
+    def __init__(self):     # 초기화
+        self.n = 0
+        self.id = 0             # id 를 0으로 초기화
+        self.date = ""          # date 를 공백으로 초기화
+        self.word = ""          # wor d를 공백으로 초기화
+        self.word_count = 0
+        self.user_count = 0
+        self.first = None
+        self.p = None
+        self.left = None
+        self.right = None
+        self.red = False       # Red-Black Tree의 color를 Black으로 초기화
+
+class Int_Vertex_Word(Vertex_Word):  # Word tree의 vertex 내용을 구성
+    def __init__(self):                    # 초기화
+        super().__init__()
+        self.word = 0
+    def less_than(self,other):
+        return self.word < other.word
+
+    def make_node(self,id, date, word):   # Vertex 노드를 생성
+        n = Int_Vertex_Word()
+        n.id = id
+        n.date = date.replace('\n', '')
+        n.word = word.replace('\n', '')
+        return n
+    def print_node(self):              # 노드의 내용을 출력
+        print(self.word)
+
+
+        
 
 class Adj:
     def __init__(self):
@@ -144,7 +273,7 @@ class Vertex:
 class DijkVertex(Vertex):
     def __init__(self, name):
         super().__init__(name)
-        self.d = INFTY
+        self.d = 1E10
         self.priority = None
     def __repr__(self):
         return "(%a %a %a)" % (self.name,self.n,self.d)
@@ -382,46 +511,7 @@ class DepthFirstSearch:
 
 
 
-class Vertex_User:
-    def __init__(self):
-        self.n = 0;
-        self.id = 0
-        self.date = ""
-        self.name = ""
-        self.user_count = 0
-        self.friend_count = 0
-        self.tweet_count = 0
-        self.first = None
-        self.p = None
-        self.left = None
-        self.right = None
-        self.red = False
-    def add(self, v):
-        a = Adj()
-        a.n = v.n
-        a.next = self.first
-        self.first = a
-    def copy(self, other):
-        self.parent = other.parent
-        self.name = other.name
-        self.n = other.n
-        self.first = other.first        
-        
 
-class Int_Vertex_User(Vertex_User):
-    def __init__(self):
-        super().__init__()
-        self.id = 0
-    def less_than(self,other):
-        return self.id < other.id
-    def make_node(self,id, date, name):
-        n = Int_Vertex_User()
-        n.id = id
-        n.date = date.replace('\n', '')
-        n.name = name.replace('\n', '')    
-        return n
-    def print_node(self):
-        print(self.id)
 
 
 
@@ -431,84 +521,7 @@ BLACK = 2
 
 
         
-class Vertex_Friend:
-    def __init__(self, name):
-        self.color = WHITE
-        self.parent = -1
-        self.name = name        
-        self.n = 0
-        self.id = 0
-        self.friend_id = 0
-        self.first = None
-        self.p = None
-        self.left = None
-        self.right = None
-        self.red = False
-    def add(self, v):
-        a = Adj()
-        a.n = v.n
-        a.next = self.first
-        self.first = a
-    def copy(self, other):
-        self.color = other.color
-        self.parent = other.parent
-        self.name = other.name
-        self.n = other.n
-        self.first = other.first        
-        
 
-class Int_Vertex_Friend(Vertex_Friend):
-    def __init__(self, name):
-        super().__init__(name)
-        self.id = 0
-        self.d = 0
-        self.f = 0        
-    def less_than(self,other):
-        return self.id < other.id
-    def make_node(self,id, friend_id):
-        n = Int_Vertex_Friend("")
-        n.id = id
-        n.friend_id = friend_id
-        return n
-    def print_node(self):
-        print(self.id)
-    def copy(self, other):
-        super().copy(other)
-        self.d = other.d
-        self.f = other.f        
-        
-
-
-class Vertex_Word:
-    def __init__(self):
-        self.n = 0
-        self.id = 0
-        self.date = ""
-        self.word = ""
-        self.word_count = 0
-        self.user_count = 0
-        self.first = None
-        self.p = None
-        self.left = None
-        self.right = None
-        self.red = False
-
-class Int_Vertex_Word(Vertex_Word):
-    def __init__(self):
-        super().__init__()
-        self.word = 0
-    def less_than(self,other):
-        return self.word < other.word
-
-    def make_node(self,id, date, word):
-        n = Int_Vertex_Word()
-        n.id = id
-        n.date = date.replace('\n', '')
-        n.word = word.replace('\n', '')
-        return n
-    def print_node(self):
-     #   print(self.word, self.id, self.p.id, self.p.p.id)
-        print(self.word)
 
 
 class ListNode:
@@ -546,7 +559,7 @@ class List:
 
         
 
-class RedBlackTree:
+class RedBlackTree:              # Red-Black Tree
     def __init__(self):
         self.root = None
     def insert(self,z):
@@ -763,7 +776,7 @@ class RedBlackTree:
         self.print_util(self.root, 0)
 
 
-
+# 메뉴 인터페이스 시작
 
 def menu_interface():
     print("\n0. Read data files")
@@ -790,13 +803,14 @@ list_word = List()
 list_word_friend = List()
 
 
+# 메뉴 인터페이스 끝
+# 메뉴 0 (Read data files) 시작
 
 def menu0():
 
-
-    rbt_user.__init__()
-    rbt_friend.__init__()
-    rbt_word.__init__()
+    rbt_user.__init__()     # 레드블랙 트리(rbt_user) 초기화
+    rbt_friend.__init__()   # 레드블랙 트리(rbt_friend) 초기화
+    rbt_word.__init__()     # 레드블랙 트리(rbt_word) 초기화
     
     proto_user = Int_Vertex_User()
 
@@ -808,7 +822,7 @@ def menu0():
     for line in user_file:
         line_count += 1
      
-    user_number = int(line_count/4)
+    user_number = int(line_count/4)   # user.txt 파일에서 user 수 계산
 
     user_file = open('user.txt')
     line_count = -1
@@ -822,6 +836,7 @@ def menu0():
         elif line_count%4 == 2 :
             temp_name = line
             rbt_user.insert(proto_user.make_node(temp_id, temp_date.replace('\n', ''), temp_name.replace('\n', '')))
+            # user.txt 파일의 내용들을 레드 블랙 트리인 rbt_user 로 insert
 
 
     proto_friend = Int_Vertex_Friend("")
@@ -834,7 +849,7 @@ def menu0():
     for line in friend_file:
         line_count += 1
      
-    friend_number = int(line_count/3)
+    friend_number = int(line_count/3)   # friend.txt 파일에서 friendship 수 계산
 
     friend_file = open('friend.txt')
     line_count = -1
@@ -846,7 +861,7 @@ def menu0():
         elif line_count%3 == 1 :
             temp_friend_id = int(line)
             rbt_friend.insert(proto_friend.make_node(temp_id, temp_friend_id))
-
+            # friend.txt 파일의 내용들을 레드 블랙 트리인 rbt_friend 로 insert
 
 
     proto_word = Int_Vertex_Word()
@@ -858,7 +873,7 @@ def menu0():
     for line in word_file:
         line_count += 1
      
-    word_number = int(line_count/4)
+    word_number = int(line_count/4) # word.txt 파일에서 word 수 계산
     
     word_file = open('word.txt')
     line_count = -1
@@ -872,6 +887,7 @@ def menu0():
         elif line_count%4 == 2 :
             temp_word = line
             rbt_word.insert(proto_word.make_node(temp_id, temp_date.replace('\n', ''), temp_word.replace('\n', '')))
+            # word.txt 파일의 내용들을 레드 블랙 트리인 rbt_word 로 insert
 
     print("Total users:", user_number)
     print("Total friendship records:", friend_number)
@@ -879,7 +895,7 @@ def menu0():
 
     return rbt_user, rbt_friend, rbt_word
 
-
+# 메뉴 0 (Read data files) 끝.
 
 
 
@@ -944,15 +960,6 @@ def statistics_tweets_cal(rbt_user, total_tweet, tweet_count, min_tweet, max_twe
         total_tweet, tweet_count, min_tweet, max_tweet = statistics_tweets_cal(rbt_user.left, total_tweet, tweet_count, min_tweet, max_tweet)
 
     return total_tweet, tweet_count, min_tweet, max_tweet
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1598,8 +1605,6 @@ def vertices_add9(rbt_friend, vertices_user9):
             for j in range(len(vertices_user9)):
                 if(rbt_friend.friend_id == vertices_user9[j]):
                     v[i].add(v[j], 1)
-                #    print(v[i], " 888 ",  vertices_user9[j])
-
 
     if (rbt_friend.left):
         vertices_add9(rbt_friend.left, vertices_user9)
@@ -1640,27 +1645,8 @@ def menu9():
 
     v[given_user_i].d = 0
 
-  #  given_user = 
-
-
-
-
-
-
-#        p = self.vertices[n].first
- #       while p:
-  #          print (p.n.name, end = ' ')
-
-            
-    
-  #  g.print_vertices()
     g.shortest_path()
     g.print_vertices()
-    
- #   add_friend(rbt_friend.root, v[0])
- #   vertices_add(rbt_friend.root, vertices_user9)
-
-        
 
 
         
@@ -1678,11 +1664,7 @@ def main():
         elif menu_input == "1":
             menu1()
         elif menu_input == "2":
-            menu2()
-
-        elif menu_input == "21":
-            menu21()
-            
+            menu2()      
         elif menu_input == "3":
             menu3()
         elif menu_input == "4":
