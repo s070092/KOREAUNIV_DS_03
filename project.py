@@ -1,3 +1,219 @@
+import sys
+
+INFTY = 1E10
+sys.setrecursionlimit(10000)
+
+class Adj:
+    def __init__(self):
+        self.n = 0
+        self.next = None
+
+class AdjWeight:
+    def __init__(self, n):
+        self.n = n
+        self.next = None      
+
+
+class Heap:
+    def __init__(self):
+        self.nelem = 0
+        self.A = []
+    def parent(self,n):
+        return (n-1)//2
+    def left(self,n):
+        return 2*n+1
+    def right(self,n):
+        return 2*n+2
+    def compare(self,a,b):
+        return a - b > 00
+    def exchange(self,i,j):
+        A = self.A
+        A[i],A[j] = A[j],A[i]
+    def heapify(self,i):
+        A = self.A
+        l = self.left(i)
+        r = self.right(i)
+        if l < self.nelem and self.compare(A[l], A[i]):
+            largest = l
+        else:
+            largest = i
+        if r < self.nelem and self.compare(A[r], A[largest]):
+            largest = r
+        if largest != i:
+            self.exchange(i,largest)
+            self.heapify(largest)
+            
+class PrioNode:
+    def __init__(self, key, n):
+        self.ndx = 0
+        self.n = n
+        self.key = key
+    def __repr__(self):
+        return "(%d:%d,%d)" % (self.ndx,self.n, self.key)
+
+class MaxQueue(Heap):
+    def __init__(self):
+        super().__init__()
+    def compare(self,a,b):
+        return a.key > b.key
+    def exchange(self,i,j):
+        A = self.A
+        A[i].ndx = j
+        A[j].ndx = i
+        super().exchange(i,j)
+    def update_key(self,i):
+        parent = lambda x: self.parent(i)
+        compare = lambda a,b: self.compare(a,b)
+        A = self.A
+        while i > 0 and not compare(A[parent(i)], A[i]):
+            self.exchange(i,parent(i))
+            i = parent(i)
+    def increase_key(self,i,key):
+        A = self.A
+        if key < A[i].key:
+            print ("Error")
+            sys.exit(-1)
+        A[i].key = key
+        self.update_key(i)
+    def insert(self,n):
+        A = self.A
+        while (len(A) < self.nelem):
+            A.append(None)
+        i = self.nelem
+        A.append(None)
+        self.nelem = self.nelem + 1
+        A[i] = n
+        A[i].ndx = i
+        self.update_key(i)
+    def extract(self):
+        elem = self.A[0]
+        self.exchange(0,self.nelem-1)
+        self.nelem = self.nelem - 1
+        self.heapify(0)
+        return elem
+    def is_empty(self):
+        return self.nelem == 0
+
+class MinQueue(MaxQueue):
+    def __init__(self):
+        super().__init__()
+    def compare(self,a,b):
+        return a.key < b.key
+    def update_key(self,i):
+        parent = lambda x: self.parent(i)
+        A = self.A
+        while i > 0 and not self.compare(A[parent(i)], A[i]):
+            self.exchange(i,parent(i))
+            i = parent(i)
+    def decrease_key(self,i,key):
+        A = self.A
+        if key > A[i].key:
+            print ("Error")
+            sys.exit(-1)
+        A[i].key = key
+        self.update_key(i)
+    def __repr__(self):
+        return "%a %a" % (self.nelem,self.A)
+
+
+class Weight(AdjWeight):
+    def __init__(self, n, w):
+        super().__init__(n)
+        self.w = w
+
+        
+
+class Vertex:
+    def __init__(self, name):
+        self.parent = -1
+        self.name = name
+        self.n = 0
+        self.first = None
+        self.red = False
+    def add(self, v):
+        a = AdjWeight()
+        a.n = v.n
+        a.next = self.first
+        self.first = a
+    def copy(self, other):
+        self.parent = other.parent
+        self.name = other.name
+        self.n = other.n
+        self.first = other.first
+
+class DijkVertex(Vertex):
+    def __init__(self, name):
+        super().__init__(name)
+        self.d = INFTY
+        self.priority = None
+    def __repr__(self):
+        return "(%a %a %a)" % (self.name,self.n,self.d)
+    def add(self, v, w):
+        a = Weight(v, w)
+        a.next = self.first
+        self.first = a
+    def set_priority(self,n):
+        self.priority = n
+    def decrease_key(self, q):
+        prio = self.priority
+        ndx = prio.ndx
+        q.decrease_key(ndx, self.d)
+        
+
+class Dijkstra:
+    def __init__(self):
+        self.vertices = []
+        self.q = MinQueue()
+    def add_vertex(self,name):
+        n = len(self.vertices)
+        v = DijkVertex(name)
+        v.n = n
+        self.vertices.append(v)
+        return v
+    def get_vertex(self,name):
+        for v in self.vertices:
+            if v.name == name:
+                return v
+        return None        
+    def print_vertex(self,n):
+        print (self.vertices[n].name, end=' ')
+        print (self.vertices[n].parent, end=' ')
+        print (self.vertices[n].d, end=' ')
+        p = self.vertices[n].first
+        while p:
+            print (p.n.name, end = ' ')
+            print (p.w, end = ' ')
+            p = p.next
+        print('')
+    def print_vertices(self):
+        for i in range(len(self.vertices)):
+            self.print_vertex(i)
+    def relax(self, u):
+        vset = self.vertices
+        q = self.q
+        p = u.first
+        while p:
+            v = p.n;
+            d = u.d + p.w
+            if d < v.d:
+                v.d = d
+                v.parent = u.n
+                print(v)
+                v.decrease_key(q)
+            p = p.next
+    def shortest_path(self):
+        q = self.q
+        vset = self.vertices
+        for v in vset:
+            n = PrioNode(v.d, v.n)
+            v.set_priority(n)
+            q.insert(n)
+        while not q.is_empty():
+            u = q.extract()
+            self.relax(vset[u.n])
+
+            
+
 
 class Queue:
     def __init__(self):
@@ -151,7 +367,6 @@ class DepthFirstSearch:
     
     def scc(self):
         self.dfs()
-        self.print_vertices()
         self.transpose()
         sorted = self.sort_by_f()
         vset = self.vertices
@@ -162,10 +377,6 @@ class DepthFirstSearch:
             if self.vertices[n].color == WHITE:
                 self.scc_find(vset[n])
 
-class Adj:
-    def __init__(self):
-        self.n = 0
-        self.next = None
 
 
 
@@ -184,11 +395,18 @@ class Vertex_User:
         self.p = None
         self.left = None
         self.right = None
+        self.red = False
     def add(self, v):
         a = Adj()
         a.n = v.n
         a.next = self.first
         self.first = a
+    def copy(self, other):
+        self.parent = other.parent
+        self.name = other.name
+        self.n = other.n
+        self.first = other.first        
+        
 
 class Int_Vertex_User(Vertex_User):
     def __init__(self):
@@ -225,6 +443,7 @@ class Vertex_Friend:
         self.p = None
         self.left = None
         self.right = None
+        self.red = False
     def add(self, v):
         a = Adj()
         a.n = v.n
@@ -272,6 +491,7 @@ class Vertex_Word:
         self.p = None
         self.left = None
         self.right = None
+        self.red = False
 
 class Int_Vertex_Word(Vertex_Word):
     def __init__(self):
@@ -326,7 +546,7 @@ class List:
 
         
 
-class BinarySearchTree:
+class RedBlackTree:
     def __init__(self):
         self.root = None
     def insert(self,z):
@@ -345,29 +565,179 @@ class BinarySearchTree:
             y.left = z
         else:
             y.right = z
+            
+        z.left = None
+        z.right = None
+        z.red = True
+        self.insert_fixup(z)
 
+    def insert_fixup(self, z):
+        while z.p != None and z.p.red:
+            if z.p.p != None:
+                if z.p == z.p.p.left:
+                    y = z.p.p.right
+                    if y != None :
+                        if y.red:
+                            z.p.red = False
+                            y.red = False
+                            z.p.p.red = True
+                            z = z.p.p
+                        else:
+                            if z == z.p.right:
+                                z = z.p
+                                self.left_rotate(z)
+                            z.p._red = False
+                            z.p.p._red = True
+                            self.right_rotate(z.p.p)
+                    else :
+                        break
+                else :
+                    break
+            else:
+                if z.p.p != None:
+                    y = z.p.p.left
+                    if y.red:
+                        z.p.red = False
+                        y._red = False
+                        z.p.p._red = True
+                        z = z.p.p
+                    else:
+                        if z == z.p.left:
+                            z = z.p
+                            self._right_rotate(z)
+                        z.p.red = False
+                        z.p.p.red = True
+                        self.left_rotate(z.p.p)
+                else :
+                    break
+                self.root.red = False
+
+
+
+        
     def delete(self,z):
-        print("88888 ", self)
+        y = z
+        y_original_color = y.red
         if z == None:
             print("No data : delete 할 data 가 없습니다. (root == Null)")
             return None
         elif z.left == None:
+            x = z.right
             self.transplant(z, z.right)
         elif z.right == None:
+            x = z.left
             self.transplant(z, z.left)
         else:
             y = self.minimum(z.right)
-            if y.p != z:
+            y_original_color = y.red
+            x = y.right
+            if y.p == z:
+                x.p = y
+            else:
                 self.transplant(y, y.right)
                 y.right = z.right
                 y.right.p = y
             self.transplant(z, y)
             y.left = z.left
             y.left.p = y
+        if y_original_color == False :
+            self.delete_fixup(x)
+
+
+    
+    def delete_fixup(self,x):
+        while x != self.root and x.red == False :
+            if x == x.p.left :
+                w = x.p.right
+                if w.red == True :
+                    w.red = False
+                    x.p.red = True
+                    left_rotate(self, x.p)
+                    w= w.p.right
+                if w.left.red == False and w.right.red == False :
+                    w.red = True
+                    x = x.p
+                else :
+                    if w.right.red == False :
+                        w.left.red = False
+                        w.red = True
+                        right_rotate(self, w)
+                        w = x.p.right
+                    w.red = x.p.red
+                    x.p.red = False
+                    w.right.red = False
+                    left_rotate(self, x.p)
+                    x = self.root
+            else :
+                w = x.p.left
+                if w.red == True :
+                    w.red = False
+                    x.p.red = True
+                    right_rotate(self, x.p)
+                    w= w.p.left
+                if w.right.red == False and w.left.red == False :
+                    w.red = True
+                    x = x.p
+                else :
+                    if w.left.red == False :
+                        w.right.red = False
+                        w.red = True
+                        left_rotate(self, w)
+                        w = x.p.left
+                    w.red = x.p.red
+                    x.p.red = False
+                    w.left.red = False
+                    right_rotate(self, x.p)
+                    x = self.root
+        x.red = False
+
+            
     def minimum(self, x):
+        if None == x:
+            x = self.root
         while x.left != None:
             x = x.left
         return x
+    
+    def maximum(self, x):
+        if None == x:
+            x = self.root
+        while x.right != self.nil:
+            x = x.right
+        return x
+    
+    def left_rotate(self, x):
+        y = x.right
+        x.right = y.left
+        if y.left != None:
+            y.left.p = x
+        y.p = x.p
+        if x.p == None:
+            self.root = y
+        elif x == x.p.left:
+            x.p.left = y
+        else:
+            x.p.right = y
+        y.left = x
+        x.p = y
+
+
+    def right_rotate(self, y):
+        x = y.left
+        y.left = x.right
+        if x.right != None:
+            x.right.p = y
+        x.p = y.p
+        if y.p == None:
+            self.root = x
+        elif y == y.p.right:
+            y.p.right = x
+        else:
+            y.p.left = x
+        x.right = y
+        y.p = x
+    
+    
     def transplant(self, u, v):
         if u.p == None:
             self.root = v
@@ -409,9 +779,9 @@ def menu_interface():
     print("99. Quit")
     print("Select Menu:")
     
-bst_user = BinarySearchTree()
-bst_friend = BinarySearchTree()
-bst_word = BinarySearchTree()
+rbt_user = RedBlackTree()
+rbt_friend = RedBlackTree()
+rbt_word = RedBlackTree()
 
 list_user_mentioned = List()
 list_friend = List()
@@ -424,9 +794,9 @@ list_word_friend = List()
 def menu0():
 
 
-    bst_user.__init__()
-    bst_friend.__init__()
-    bst_word.__init__()
+    rbt_user.__init__()
+    rbt_friend.__init__()
+    rbt_word.__init__()
     
     proto_user = Int_Vertex_User()
 
@@ -451,7 +821,7 @@ def menu0():
             temp_date = line
         elif line_count%4 == 2 :
             temp_name = line
-            bst_user.insert(proto_user.make_node(temp_id, temp_date.replace('\n', ''), temp_name.replace('\n', '')))
+            rbt_user.insert(proto_user.make_node(temp_id, temp_date.replace('\n', ''), temp_name.replace('\n', '')))
 
 
     proto_friend = Int_Vertex_Friend("")
@@ -475,7 +845,7 @@ def menu0():
             temp_id = int(line)
         elif line_count%3 == 1 :
             temp_friend_id = int(line)
-            bst_friend.insert(proto_friend.make_node(temp_id, temp_friend_id))
+            rbt_friend.insert(proto_friend.make_node(temp_id, temp_friend_id))
 
 
 
@@ -501,77 +871,77 @@ def menu0():
             temp_date = line
         elif line_count%4 == 2 :
             temp_word = line
-            bst_word.insert(proto_word.make_node(temp_id, temp_date.replace('\n', ''), temp_word.replace('\n', '')))
+            rbt_word.insert(proto_word.make_node(temp_id, temp_date.replace('\n', ''), temp_word.replace('\n', '')))
 
     print("Total users:", user_number)
     print("Total friendship records:", friend_number)
     print("Total tweets:", word_number)
 
-    return bst_user, bst_friend, bst_word
+    return rbt_user, rbt_friend, rbt_word
 
 
 
 
 
-def statistics_friend_user(bst_user, bst_friend):
-    if(bst_user.right):
-        statistics_friend_user(bst_user.right, bst_friend)
-    if(bst_user.id == bst_friend.id):
-        bst_user.friend_count += 1
-    if(bst_user.left):
-        statistics_friend_user(bst_user.left, bst_friend)
+def statistics_friend_user(rbt_user, rbt_friend):
+    if(rbt_user.right):
+        statistics_friend_user(rbt_user.right, rbt_friend)
+    if(rbt_user.id == rbt_friend.id):
+        rbt_user.friend_count += 1
+    if(rbt_user.left):
+        statistics_friend_user(rbt_user.left, rbt_friend)
 
 
-def statistics_friend(bst_user, bst_friend):
-    if (bst_friend.right):
-        statistics_friend(bst_user, bst_friend.right)
-    statistics_friend_user(bst_user, bst_friend)
-    if (bst_friend.left):
-        statistics_friend(bst_user, bst_friend.left)
+def statistics_friend(rbt_user, rbt_friend):
+    if (rbt_friend.right):
+        statistics_friend(rbt_user, rbt_friend.right)
+    statistics_friend_user(rbt_user, rbt_friend)
+    if (rbt_friend.left):
+        statistics_friend(rbt_user, rbt_friend.left)
 
-def statistics_friend_cal(bst_user, total_number, user_number, min_friend, max_friend):
-    if (bst_user.right) :
-        total_number, user_number, min_friend, max_friend = statistics_friend_cal(bst_user.right, total_number, user_number, min_friend, max_friend)
-    total_number += bst_user.friend_count
+def statistics_friend_cal(rbt_user, total_number, user_number, min_friend, max_friend):
+    if (rbt_user.right) :
+        total_number, user_number, min_friend, max_friend = statistics_friend_cal(rbt_user.right, total_number, user_number, min_friend, max_friend)
+    total_number += rbt_user.friend_count
     user_number += 1
-    if bst_user.friend_count < min_friend :
-        min_friend = bst_user.friend_count      
-    if bst_user.friend_count > max_friend :
-        max_friend = bst_user.friend_count      
-    if (bst_user.left) :
-        total_number, user_number, min_friend, max_friend = statistics_friend_cal(bst_user.left, total_number, user_number, min_friend, max_friend)
+    if rbt_user.friend_count < min_friend :
+        min_friend = rbt_user.friend_count      
+    if rbt_user.friend_count > max_friend :
+        max_friend = rbt_user.friend_count      
+    if (rbt_user.left) :
+        total_number, user_number, min_friend, max_friend = statistics_friend_cal(rbt_user.left, total_number, user_number, min_friend, max_friend)
 
     return total_number, user_number, min_friend, max_friend
         
 
 
-def statistics_tweets_user(bst_user, bst_word):
-    if (bst_user.right):
-        statistics_tweets_user(bst_user.right, bst_word)
-    if(bst_user.id == bst_word.id):
-        bst_user.tweet_count += 1
-    if (bst_user.left):
-        statistics_tweets_user(bst_user.left, bst_word)
+def statistics_tweets_user(rbt_user, rbt_word):
+    if (rbt_user.right):
+        statistics_tweets_user(rbt_user.right, rbt_word)
+    if(rbt_user.id == rbt_word.id):
+        rbt_user.tweet_count += 1
+    if (rbt_user.left):
+        statistics_tweets_user(rbt_user.left, rbt_word)
 
-def statistics_tweets(bst_user, bst_word):
-    if (bst_word.right):
-        statistics_tweets(bst_user, bst_word.right)
-    statistics_tweets_user(bst_user, bst_word)    
-    if (bst_word.left):
-        statistics_tweets(bst_user, bst_word.left)         
+def statistics_tweets(rbt_user, rbt_word):
+    if (rbt_word.right):
+        statistics_tweets(rbt_user, rbt_word.right)
+    statistics_tweets_user(rbt_user, rbt_word)    
+    if (rbt_word.left):
+        statistics_tweets(rbt_user, rbt_word.left)         
 
 
-def statistics_tweets_cal(bst_user, total_tweet, tweet_count, min_tweet, max_tweet):
-    if (bst_user.right) :
-        total_tweet, tweet_count, min_tweet, max_tweet = statistics_tweets_cal(bst_user.right, total_tweet, tweet_count, min_tweet, max_tweet)
-    total_tweet += bst_user.tweet_count
+def statistics_tweets_cal(rbt_user, total_tweet, tweet_count, min_tweet, max_tweet):
+    if (rbt_user.right) :
+        total_tweet, tweet_count, min_tweet, max_tweet = statistics_tweets_cal(rbt_user.right, total_tweet, tweet_count, min_tweet, max_tweet)
+    total_tweet += rbt_user.tweet_count
     tweet_count += 1
-    if bst_user.tweet_count < min_tweet :
-        min_tweet = bst_user.tweet_count      
-    if bst_user.tweet_count > max_tweet :
-        max_tweet = bst_user.tweet_count 
-    if (bst_user.left) :
-        total_tweet, tweet_count, min_tweet, max_tweet = statistics_tweets_cal(bst_user.left, total_tweet, tweet_count, min_tweet, max_tweet)
+    if rbt_user.tweet_count < min_tweet :
+        min_tweet = rbt_user.tweet_count      
+    if rbt_user.tweet_count > max_tweet :
+        max_tweet = rbt_user.tweet_count 
+    if (rbt_user.left) :
+        total_tweet, tweet_count, min_tweet, max_tweet = statistics_tweets_cal(rbt_user.left, total_tweet, tweet_count, min_tweet, max_tweet)
 
     return total_tweet, tweet_count, min_tweet, max_tweet
 
@@ -598,17 +968,17 @@ def menu1():
     max_tweet = 0
 
 
-    statistics_friend(bst_user.root, bst_friend.root)
+    statistics_friend(rbt_user.root, rbt_friend.root)
 
 
-    total_number, user_number, min_friend, max_friend = statistics_friend_cal(bst_user.root, total_number, user_number, min_friend, max_friend) 
+    total_number, user_number, min_friend, max_friend = statistics_friend_cal(rbt_user.root, total_number, user_number, min_friend, max_friend) 
     print("Average number of friends:", total_number/user_number)
     print("Minimum number of friends:", min_friend)
     print("Maximum number of friends:", max_friend, "\n")
 
-    statistics_tweets(bst_user.root, bst_word.root)
+    statistics_tweets(rbt_user.root, rbt_word.root)
 
-    total_tweet, tweet_count, min_tweet, max_tweet = statistics_tweets_cal(bst_user.root, total_tweet, tweet_count, min_tweet, max_tweet)
+    total_tweet, tweet_count, min_tweet, max_tweet = statistics_tweets_cal(rbt_user.root, total_tweet, tweet_count, min_tweet, max_tweet)
     print("Average tweets per user:", total_tweet/tweet_count)
     print("Minimum tweets per user:", min_tweet)
     print("Maximum tweets per user:", max_tweet)
@@ -619,75 +989,84 @@ def menu1():
 
        
 
-def statistics_tweets_count(bst_word, bst_word1, most_word1, most_word1_count):
-    if (bst_word.right):
-        most_word1, most_word1_count = statistics_tweets_count(bst_word.right, bst_word1, most_word1, most_word1_count)
+def statistics_tweets_count(rbt_word, rbt_word1, most_word1, most_word1_count):
+    if (rbt_word.right):
+        most_word1, most_word1_count = statistics_tweets_count(rbt_word.right, rbt_word1, most_word1, most_word1_count)
 
-    if bst_word.word == bst_word1.word:
-        bst_word1.word_count += 1
-        if bst_word1.word_count > most_word1_count:
-           most_word1 = bst_word1.word
-           most_word1_count = bst_word1.word_count
-    if (bst_word.left):
-        most_word1, most_word1_count = statistics_tweets_count(bst_word.left, bst_word1, most_word1, most_word1_count)        
+    if rbt_word.word == rbt_word1.word:
+        rbt_word1.word_count += 1
+        if rbt_word1.word_count > most_word1_count:
+           most_word1 = rbt_word1.word
+           most_word1_count = rbt_word1.word_count
+    if (rbt_word.left):
+        most_word1, most_word1_count = statistics_tweets_count(rbt_word.left, rbt_word1, most_word1, most_word1_count)        
     return most_word1, most_word1_count
 
 
 
-def statistics_tweets_count1(bst_word1, most_word1, most_word1_count):
-    if (bst_word1.right):
-        most_word1, most_word1_count = statistics_tweets_count1(bst_word1.right, most_word1, most_word1_count)
-    most_word1, most_word1_count = statistics_tweets_count(bst_word.root, bst_word1, most_word1, most_word1_count)
-    if (bst_word1.left):
-        most_word1, most_word1_count = statistics_tweets_count1(bst_word1.left, most_word1, most_word1_count)   
+def statistics_tweets_count1(rbt_word1, most_word1, most_word1_count):
+    if (rbt_word1.right):
+        most_word1, most_word1_count = statistics_tweets_count1(rbt_word1.right, most_word1, most_word1_count)
+    most_word1, most_word1_count = statistics_tweets_count(rbt_word.root, rbt_word1, most_word1, most_word1_count)
+    if (rbt_word1.left):
+        most_word1, most_word1_count = statistics_tweets_count1(rbt_word1.left, most_word1, most_word1_count)   
     return  most_word1, most_word1_count
 
-def statistics_tweets_count2(bst_word1, most_word1, most_word2, most_word2_count):
-    if (bst_word1.right):
-        most_word1, most_word2, most_word2_count = statistics_tweets_count2(bst_word1.right, most_word1, most_word2, most_word2_count)
-    if most_word1 != bst_word1.word :
-        most_word2, most_word2_count = statistics_tweets_count(bst_word.root, bst_word1, most_word2, most_word2_count)
-    if (bst_word1.left):
-        most_word1, most_word2, most_word2_count = statistics_tweets_count2(bst_word1.left, most_word1, most_word2, most_word2_count)   
+def statistics_tweets_count2(rbt_word1, most_word1, most_word2, most_word2_count):
+    if (rbt_word1.right):
+        most_word1, most_word2, most_word2_count = statistics_tweets_count2(rbt_word1.right, most_word1, most_word2, most_word2_count)
+    if most_word1 != rbt_word1.word :
+        most_word2, most_word2_count = statistics_tweets_count(rbt_word.root, rbt_word1, most_word2, most_word2_count)
+    if (rbt_word1.left):
+        most_word1, most_word2, most_word2_count = statistics_tweets_count2(rbt_word1.left, most_word1, most_word2, most_word2_count)   
     return  most_word1, most_word2, most_word2_count
 
-def statistics_tweets_count3(bst_word1, most_word1, most_word2, most_word3, most_word3_count):
-    if (bst_word1.right):
-        most_word1, most_word2, most_word3, most_word3_count = statistics_tweets_count3(bst_word1.right, most_word1, most_word2, most_word3, most_word3_count)
-    if ((most_word1 != bst_word1.word) and (most_word2 != bst_word1.word)) :
-        most_word3, most_word3_count = statistics_tweets_count(bst_word.root, bst_word1, most_word3, most_word3_count)
-    if (bst_word1.left):
-        most_word1, most_word2, most_word3, most_word3_count = statistics_tweets_count3(bst_word1.left, most_word1, most_word2, most_word3, most_word3_count)   
+def statistics_tweets_count3(rbt_word1, most_word1, most_word2, most_word3, most_word3_count):
+    if (rbt_word1.right):
+        most_word1, most_word2, most_word3, most_word3_count = statistics_tweets_count3(rbt_word1.right, most_word1, most_word2, most_word3, most_word3_count)
+    if ((most_word1 != rbt_word1.word) and (most_word2 != rbt_word1.word)) :
+        most_word3, most_word3_count = statistics_tweets_count(rbt_word.root, rbt_word1, most_word3, most_word3_count)
+    if (rbt_word1.left):
+        most_word1, most_word2, most_word3, most_word3_count = statistics_tweets_count3(rbt_word1.left, most_word1, most_word2, most_word3, most_word3_count)   
     return  most_word1, most_word2, most_word3, most_word3_count
 
-def statistics_tweets_count4(bst_word1, most_word1, most_word2, most_word3, most_word4, most_word4_count):
-    if (bst_word1.right):
-        most_word1, most_word2, most_word3, most_word4, most_word4_count = statistics_tweets_count4(bst_word1.right, most_word1, most_word2, most_word3, most_word4, most_word4_count)
-    if ((most_word1 != bst_word1.word) and (most_word2 != bst_word1.word) and (most_word3 != bst_word1.word)) :
-        most_word4, most_word4_count = statistics_tweets_count(bst_word.root, bst_word1, most_word4, most_word4_count)
-    if (bst_word1.left):
-        most_word1, most_word2, most_word3, most_word4, most_word4_count = statistics_tweets_count4(bst_word1.left, most_word1, most_word2, most_word3, most_word4, most_word4_count)   
+def statistics_tweets_count4(rbt_word1, most_word1, most_word2, most_word3, most_word4, most_word4_count):
+    if (rbt_word1.right):
+        most_word1, most_word2, most_word3, most_word4, most_word4_count = statistics_tweets_count4(rbt_word1.right, most_word1, most_word2, most_word3, most_word4, most_word4_count)
+    if ((most_word1 != rbt_word1.word) and (most_word2 != rbt_word1.word) and (most_word3 != rbt_word1.word)) :
+        most_word4, most_word4_count = statistics_tweets_count(rbt_word.root, rbt_word1, most_word4, most_word4_count)
+    if (rbt_word1.left):
+        most_word1, most_word2, most_word3, most_word4, most_word4_count = statistics_tweets_count4(rbt_word1.left, most_word1, most_word2, most_word3, most_word4, most_word4_count)   
     return  most_word1, most_word2, most_word3, most_word4, most_word4_count
 
 
-def statistics_tweets_count5(bst_word1, most_word1, most_word2, most_word3, most_word4, most_word5, most_word5_count):
-    if (bst_word1.right):
-        most_word1, most_word2, most_word3, most_word4, most_word5, most_word5_count = statistics_tweets_count5(bst_word1.right, most_word1, most_word2, most_word3, most_word4, most_word5, most_word5_count)
-    if ((most_word1 != bst_word1.word) and (most_word2 != bst_word1.word) and (most_word3 != bst_word1.word) and (most_word4 != bst_word1.word)) :
-        most_word5, most_word5_count = statistics_tweets_count(bst_word.root, bst_word1, most_word5, most_word5_count)
-    if (bst_word1.left):
-        most_word1, most_word2, most_word3, most_word4, most_word5, most_word5_count = statistics_tweets_count5(bst_word1.left, most_word1, most_word2, most_word3, most_word4, most_word5, most_word5_count)   
+def statistics_tweets_count5(rbt_word1, most_word1, most_word2, most_word3, most_word4, most_word5, most_word5_count):
+    if (rbt_word1.right):
+        most_word1, most_word2, most_word3, most_word4, most_word5, most_word5_count = statistics_tweets_count5(rbt_word1.right, most_word1, most_word2, most_word3, most_word4, most_word5, most_word5_count)
+    if ((most_word1 != rbt_word1.word) and (most_word2 != rbt_word1.word) and (most_word3 != rbt_word1.word) and (most_word4 != rbt_word1.word)) :
+        most_word5, most_word5_count = statistics_tweets_count(rbt_word.root, rbt_word1, most_word5, most_word5_count)
+    if (rbt_word1.left):
+        most_word1, most_word2, most_word3, most_word4, most_word5, most_word5_count = statistics_tweets_count5(rbt_word1.left, most_word1, most_word2, most_word3, most_word4, most_word5, most_word5_count)   
     return  most_word1, most_word2, most_word3, most_word4, most_word5, most_word5_count
 
-def bst_word_init(bst_word1):
-    if (bst_word1.right):
-        bst_word_init(bst_word1.right)
-    bst_word1.word_count = 0
-    bst_word1.user_count = 0
-    if (bst_word1.left):
-        bst_word_init(bst_word1.left)
-    return bst_word1
-        
+def rbt_word_init(rbt_word1):
+    if (rbt_word1.right):
+        rbt_word_init(rbt_word1.right)
+    rbt_word1.word_count = 0
+    rbt_word1.user_count = 0
+    if (rbt_word1.left):
+        rbt_word_init(rbt_word1.left)
+    return rbt_word1
+
+
+
+
+
+
+
+
+
+
 def menu2():
     most_word1 = ""
     most_word1_count = 0
@@ -707,24 +1086,24 @@ def menu2():
 
     print("Top 5 most tweeted words\n")
     
-    bst_word1 = bst_word
-    most_word1, most_word1_count = statistics_tweets_count1(bst_word1.root, most_word1, most_word1_count)
+    rbt_word1 = rbt_word
+    most_word1, most_word1_count = statistics_tweets_count1(rbt_word1.root, most_word1, most_word1_count)
     print("1:\t", most_word1, "\t", most_word1_count)
-    bst_word1.root = bst_word_init(bst_word1.root)
+    rbt_word1.root = rbt_word_init(rbt_word1.root)
 
-    most_word1, most_word2, most_word2_count = statistics_tweets_count2(bst_word1.root, most_word1, most_word2, most_word2_count)
+    most_word1, most_word2, most_word2_count = statistics_tweets_count2(rbt_word1.root, most_word1, most_word2, most_word2_count)
     print("2:\t", most_word2, "\t", most_word2_count)
     
-    bst_word1.root = bst_word_init(bst_word1.root)    
-    most_word1, most_word2, most_word3, most_word3_count = statistics_tweets_count3(bst_word1.root, most_word1, most_word2, most_word3, most_word3_count)
+    rbt_word1.root = rbt_word_init(rbt_word1.root)    
+    most_word1, most_word2, most_word3, most_word3_count = statistics_tweets_count3(rbt_word1.root, most_word1, most_word2, most_word3, most_word3_count)
     print("3:\t", most_word3, "\t", most_word3_count)
     
-    bst_word1.root = bst_word_init(bst_word1.root)
-    most_word1, most_word2, most_word3, most_word4, most_word4_count = statistics_tweets_count4(bst_word1.root, most_word1, most_word2, most_word3, most_word4, most_word4_count)
+    rbt_word1.root = rbt_word_init(rbt_word1.root)
+    most_word1, most_word2, most_word3, most_word4, most_word4_count = statistics_tweets_count4(rbt_word1.root, most_word1, most_word2, most_word3, most_word4, most_word4_count)
     print("4:\t", most_word4, "\t", most_word4_count)
     
-    bst_word1.root = bst_word_init(bst_word1.root)
-    most_word1, most_word2, most_word3, most_word4, most_word5, most_word5_count = statistics_tweets_count5(bst_word1.root, most_word1, most_word2, most_word3, most_word4, most_word5_count, most_word5_count)
+    rbt_word1.root = rbt_word_init(rbt_word1.root)
+    most_word1, most_word2, most_word3, most_word4, most_word5, most_word5_count = statistics_tweets_count5(rbt_word1.root, most_word1, most_word2, most_word3, most_word4, most_word5_count, most_word5_count)
     print("5:\t", most_word5, "\t", most_word5_count) 
 
 
@@ -732,64 +1111,64 @@ def menu2():
 
 
 
-def statistics_tweets_user_count(bst_word, bst_word1, most_user1, most_user1_count):
-    if (bst_word.right):
-        most_user1, most_user1_count = statistics_tweets_user_count(bst_word.right, bst_word1, most_user1, most_user1_count)
+def statistics_tweets_user_count(rbt_word, rbt_word1, most_user1, most_user1_count):
+    if (rbt_word.right):
+        most_user1, most_user1_count = statistics_tweets_user_count(rbt_word.right, rbt_word1, most_user1, most_user1_count)
 
-    if bst_word.id == bst_word1.id:
-        bst_word1.user_count += 1
-        if bst_word1.user_count > most_user1_count:
-           most_user1 = bst_word1.id
-           most_user1_count = bst_word1.user_count
+    if rbt_word.id == rbt_word1.id:
+        rbt_word1.user_count += 1
+        if rbt_word1.user_count > most_user1_count:
+           most_user1 = rbt_word1.id
+           most_user1_count = rbt_word1.user_count
 
-    if (bst_word.left):
-        most_user1, most_user1_count = statistics_tweets_user_count(bst_word.left, bst_word1, most_user1, most_user1_count)        
+    if (rbt_word.left):
+        most_user1, most_user1_count = statistics_tweets_user_count(rbt_word.left, rbt_word1, most_user1, most_user1_count)        
     return most_user1, most_user1_count
 
 
 
-def statistics_tweets_user_count1(bst_word1, most_user1, most_user1_count):
-    if (bst_word1.right):
-        most_user1, most_user1_count = statistics_tweets_user_count1(bst_word1.right, most_user1, most_user1_count)
-    most_user1, most_user1_count = statistics_tweets_user_count(bst_word.root, bst_word1, most_user1, most_user1_count)
-    if (bst_word1.left):
-        most_user1, most_user1_count = statistics_tweets_user_count1(bst_word1.left, most_user1, most_user1_count)   
+def statistics_tweets_user_count1(rbt_word1, most_user1, most_user1_count):
+    if (rbt_word1.right):
+        most_user1, most_user1_count = statistics_tweets_user_count1(rbt_word1.right, most_user1, most_user1_count)
+    most_user1, most_user1_count = statistics_tweets_user_count(rbt_word.root, rbt_word1, most_user1, most_user1_count)
+    if (rbt_word1.left):
+        most_user1, most_user1_count = statistics_tweets_user_count1(rbt_word1.left, most_user1, most_user1_count)   
     return  most_user1, most_user1_count
 
-def statistics_tweets_user_count2(bst_word1, most_user1, most_user2, most_user2_count):
-    if (bst_word1.right):
-        most_user1, most_user2, most_user2_count = statistics_tweets_user_count2(bst_word1.right, most_user1, most_user2, most_user2_count)
-    if most_user1 != bst_word1.id :
-        most_user2, most_user2_count = statistics_tweets_user_count(bst_word.root, bst_word1, most_user2, most_user2_count)
-    if (bst_word1.left):
-        most_user1, most_user2, most_user2_count = statistics_tweets_user_count2(bst_word1.left, most_user1, most_user2, most_user2_count)   
+def statistics_tweets_user_count2(rbt_word1, most_user1, most_user2, most_user2_count):
+    if (rbt_word1.right):
+        most_user1, most_user2, most_user2_count = statistics_tweets_user_count2(rbt_word1.right, most_user1, most_user2, most_user2_count)
+    if most_user1 != rbt_word1.id :
+        most_user2, most_user2_count = statistics_tweets_user_count(rbt_word.root, rbt_word1, most_user2, most_user2_count)
+    if (rbt_word1.left):
+        most_user1, most_user2, most_user2_count = statistics_tweets_user_count2(rbt_word1.left, most_user1, most_user2, most_user2_count)   
     return  most_user1, most_user2, most_user2_count
 
-def statistics_tweets_user_count3(bst_word1, most_user1, most_user2, most_user3, most_user3_count):
-    if (bst_word1.right):
-        most_user1, most_user2, most_user3, most_user3_count = statistics_tweets_user_count3(bst_word1.right, most_user1, most_user2, most_user3, most_user3_count)
-    if ((most_user1 != bst_word1.id) and (most_user2 != bst_word1.id)) :
-        most_user3, most_user3_count = statistics_tweets_user_count(bst_word.root, bst_word1, most_user3, most_user3_count)
-    if (bst_word1.left):
-        most_user1, most_user2, most_user3, most_user3_count = statistics_tweets_user_count3(bst_word1.left, most_user1, most_user2, most_user3, most_user3_count)   
+def statistics_tweets_user_count3(rbt_word1, most_user1, most_user2, most_user3, most_user3_count):
+    if (rbt_word1.right):
+        most_user1, most_user2, most_user3, most_user3_count = statistics_tweets_user_count3(rbt_word1.right, most_user1, most_user2, most_user3, most_user3_count)
+    if ((most_user1 != rbt_word1.id) and (most_user2 != rbt_word1.id)) :
+        most_user3, most_user3_count = statistics_tweets_user_count(rbt_word.root, rbt_word1, most_user3, most_user3_count)
+    if (rbt_word1.left):
+        most_user1, most_user2, most_user3, most_user3_count = statistics_tweets_user_count3(rbt_word1.left, most_user1, most_user2, most_user3, most_user3_count)   
     return  most_user1, most_user2, most_user3, most_user3_count
 
-def statistics_tweets_user_count4(bst_word1, most_user1, most_user2, most_user3, most_user4, most_user4_count):
-    if (bst_word1.right):
-        most_user1, most_user2, most_user3, most_user4, most_user4_count = statistics_tweets_user_count4(bst_word1.right, most_user1, most_user2, most_user3, most_user4, most_user4_count)
-    if ((most_user1 != bst_word1.id) and (most_user2 != bst_word1.id) and (most_user3 != bst_word1.id)) :
-        most_user4, most_user4_count = statistics_tweets_user_count(bst_word.root, bst_word1, most_user4, most_user4_count)
-    if (bst_word1.left):
-        most_user1, most_user2, most_user3, most_user4, most_user4_count = statistics_tweets_user_count4(bst_word1.left, most_user1, most_user2, most_user3, most_user4, most_user4_count)   
+def statistics_tweets_user_count4(rbt_word1, most_user1, most_user2, most_user3, most_user4, most_user4_count):
+    if (rbt_word1.right):
+        most_user1, most_user2, most_user3, most_user4, most_user4_count = statistics_tweets_user_count4(rbt_word1.right, most_user1, most_user2, most_user3, most_user4, most_user4_count)
+    if ((most_user1 != rbt_word1.id) and (most_user2 != rbt_word1.id) and (most_user3 != rbt_word1.id)) :
+        most_user4, most_user4_count = statistics_tweets_user_count(rbt_word.root, rbt_word1, most_user4, most_user4_count)
+    if (rbt_word1.left):
+        most_user1, most_user2, most_user3, most_user4, most_user4_count = statistics_tweets_user_count4(rbt_word1.left, most_user1, most_user2, most_user3, most_user4, most_user4_count)   
     return  most_user1, most_user2, most_user3, most_user4, most_user4_count    
 
-def statistics_tweets_user_count5(bst_word1, most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count):
-    if (bst_word1.right):
-        most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count = statistics_tweets_user_count5(bst_word1.right, most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count)
-    if ((most_user1 != bst_word1.id) and (most_user2 != bst_word1.id) and (most_user3 != bst_word1.id) and (most_user4 != bst_word1.id)) :
-        most_user5, most_user5_count = statistics_tweets_user_count(bst_word.root, bst_word1, most_user5, most_user5_count)
-    if (bst_word1.left):
-        most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count = statistics_tweets_user_count5(bst_word1.left, most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count)   
+def statistics_tweets_user_count5(rbt_word1, most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count):
+    if (rbt_word1.right):
+        most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count = statistics_tweets_user_count5(rbt_word1.right, most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count)
+    if ((most_user1 != rbt_word1.id) and (most_user2 != rbt_word1.id) and (most_user3 != rbt_word1.id) and (most_user4 != rbt_word1.id)) :
+        most_user5, most_user5_count = statistics_tweets_user_count(rbt_word.root, rbt_word1, most_user5, most_user5_count)
+    if (rbt_word1.left):
+        most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count = statistics_tweets_user_count5(rbt_word1.left, most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count)   
     return  most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count
 
 
@@ -812,24 +1191,24 @@ def menu3():
 
     print("Top 5 most tweeted users\n")
     
-    bst_word1 = bst_word
-    most_user1, most_user1_count = statistics_tweets_user_count1(bst_word1.root, most_user1, most_user1_count)
+    rbt_word1 = rbt_word
+    most_user1, most_user1_count = statistics_tweets_user_count1(rbt_word1.root, most_user1, most_user1_count)
     print("1:\t", most_user1, "\t", most_user1_count)
 
-    bst_word1.root = bst_word_init(bst_word1.root)
-    most_user1, most_user2, most_user2_count = statistics_tweets_user_count2(bst_word1.root, most_user1, most_user2, most_user2_count)
+    rbt_word1.root = rbt_word_init(rbt_word1.root)
+    most_user1, most_user2, most_user2_count = statistics_tweets_user_count2(rbt_word1.root, most_user1, most_user2, most_user2_count)
     print("2:\t", most_user2, "\t", most_user2_count)
 
-    bst_word1.root = bst_word_init(bst_word1.root)
-    most_user1, most_user2, most_user3, most_user3_count = statistics_tweets_user_count3(bst_word1.root, most_user1, most_user2, most_user3, most_user3_count)
+    rbt_word1.root = rbt_word_init(rbt_word1.root)
+    most_user1, most_user2, most_user3, most_user3_count = statistics_tweets_user_count3(rbt_word1.root, most_user1, most_user2, most_user3, most_user3_count)
     print("3:\t", most_user3, "\t", most_user3_count)
 
-    bst_word1.root = bst_word_init(bst_word1.root)
-    most_user1, most_user2, most_user3, most_user4, most_user4_count = statistics_tweets_user_count4(bst_word1.root, most_user1, most_user2, most_user3, most_user4, most_user4_count)
+    rbt_word1.root = rbt_word_init(rbt_word1.root)
+    most_user1, most_user2, most_user3, most_user4, most_user4_count = statistics_tweets_user_count4(rbt_word1.root, most_user1, most_user2, most_user3, most_user4, most_user4_count)
     print("4:\t", most_user4, "\t", most_user4_count)
 
-    bst_word1.root = bst_word_init(bst_word1.root)
-    most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count = statistics_tweets_user_count5(bst_word1.root, most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count)
+    rbt_word1.root = rbt_word_init(rbt_word1.root)
+    most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count = statistics_tweets_user_count5(rbt_word1.root, most_user1, most_user2, most_user3, most_user4, most_user5, most_user5_count)
     print("5:\t", most_user5, "\t", most_user5_count)
 
 
@@ -843,34 +1222,34 @@ def menu3():
 
 
 
-def find_user_name(bst_user, list_user_mentioned) :
-    if bst_user == None :
+def find_user_name(rbt_user, list_user_mentioned) :
+    if rbt_user == None :
         return None
-    elif bst_user.id == list_user_mentioned.val :
-        print(bst_user.id, "\t", bst_user.name, "\t", bst_user.date)
+    elif rbt_user.id == list_user_mentioned.val :
+        print(rbt_user.id, "\t", rbt_user.name, "\t", rbt_user.date)
 
 
-    elif bst_user.id < list_user_mentioned.val :
-        find_user_name(bst_user.right, list_user_mentioned)
+    elif rbt_user.id < list_user_mentioned.val :
+        find_user_name(rbt_user.right, list_user_mentioned)
         
-    elif bst_user.id > list_user_mentioned.val :
-        find_user_name(bst_user.left, list_user_mentioned)
+    elif rbt_user.id > list_user_mentioned.val :
+        find_user_name(rbt_user.left, list_user_mentioned)
     
-def find_user_mentioned(bst_word, tweeted_word):
-    if bst_word == None :
+def find_user_mentioned(rbt_word, tweeted_word):
+    if rbt_word == None :
         return 1
-    if bst_word.word < tweeted_word :
-        find_user_mentioned(bst_word.right, tweeted_word) 
-    elif bst_word.word == tweeted_word :
-        list_user_mentioned.add(bst_word.id)
-        find_user_mentioned(bst_word.right, tweeted_word)            
-    elif bst_word.word > tweeted_word :
-        find_user_mentioned(bst_word.left, tweeted_word)
+    if rbt_word.word < tweeted_word :
+        find_user_mentioned(rbt_word.right, tweeted_word) 
+    elif rbt_word.word == tweeted_word :
+        list_user_mentioned.add(rbt_word.id)
+        find_user_mentioned(rbt_word.right, tweeted_word)            
+    elif rbt_word.word > tweeted_word :
+        find_user_mentioned(rbt_word.left, tweeted_word)
 
 def find_list_user_name(list_user_mentioned) :
     if list_user_mentioned == None :
         return None
-    find_user_name(bst_user.root, list_user_mentioned)
+    find_user_name(rbt_user.root, list_user_mentioned)
     find_list_user_name(list_user_mentioned.next)
 
 
@@ -882,7 +1261,7 @@ def menu4():
     print("Find users who tweeted a word (e.g., '연세대')")
     print("Input a word:")    
     tweeted_word = input()
-    find_user_mentioned(bst_word.root, tweeted_word)
+    find_user_mentioned(rbt_word.root, tweeted_word)
     
     absent = list_user_mentioned.print()
     if absent != 1 :
@@ -896,21 +1275,21 @@ def menu4():
         else :
             return 1
 
-def find_list_user_friend(bst_friend, list_user_mentioned) :
+def find_list_user_friend(rbt_friend, list_user_mentioned) :
 
-    if bst_friend == None :
+    if rbt_friend == None :
         return None
-    elif bst_friend.id < list_user_mentioned.val :
-        find_list_user_friend(bst_friend.right, list_user_mentioned)
-    elif bst_friend.id == list_user_mentioned.val :
-        list_friend.add(bst_friend.friend_id)
-        find_list_user_friend(bst_friend.right, list_user_mentioned)
-    elif bst_friend.id > list_user_mentioned.val :
-        find_list_user_friend(bst_friend.left, list_user_mentioned)
+    elif rbt_friend.id < list_user_mentioned.val :
+        find_list_user_friend(rbt_friend.right, list_user_mentioned)
+    elif rbt_friend.id == list_user_mentioned.val :
+        list_friend.add(rbt_friend.friend_id)
+        find_list_user_friend(rbt_friend.right, list_user_mentioned)
+    elif rbt_friend.id > list_user_mentioned.val :
+        find_list_user_friend(rbt_friend.left, list_user_mentioned)
 
 def find_user_friend(list_user_mentioned) :
     while list_user_mentioned != None :
-        find_list_user_friend(bst_friend.root, list_user_mentioned)
+        find_list_user_friend(rbt_friend.root, list_user_mentioned)
         list_user_mentioned = list_user_mentioned.next
 
 
@@ -918,24 +1297,24 @@ def find_user_friend(list_user_mentioned) :
 
 
 
-def find_friend_name(bst_user, list_friend_id) :
-    if bst_user == None :
+def find_friend_name(rbt_user, list_friend_id) :
+    if rbt_user == None :
         return None
-    if bst_user.id == list_friend_id :
-        print(bst_user.id, "\t", bst_user.name, "\t", bst_user.date)
+    if rbt_user.id == list_friend_id :
+        print(rbt_user.id, "\t", rbt_user.name, "\t", rbt_user.date)
 
 
-    elif bst_user.id < list_friend_id :
-        find_friend_name(bst_user.right, list_friend_id)
+    elif rbt_user.id < list_friend_id :
+        find_friend_name(rbt_user.right, list_friend_id)
         
-    elif bst_user.id > list_friend_id :
-        find_friend_name(bst_user.left, list_friend_id)
+    elif rbt_user.id > list_friend_id :
+        find_friend_name(rbt_user.left, list_friend_id)
 
         
 def find_list_friend_name(list_friend) :
     if list_friend == None :
         return None
-    find_friend_name(bst_user.root, list_friend.val)
+    find_friend_name(rbt_user.root, list_friend.val)
     find_list_friend_name(list_friend.next)
 
 
@@ -966,40 +1345,36 @@ def menu5() :
 
 
 def delete_node(node_delete) :
-    print("7      ", node_delete.word, node_delete.id, node_delete.date, node_delete)    
-    bst_word.delete(node_delete)
+    rbt_word.delete(node_delete)
 
-def delete_word(bst_word, tweeted_word):
+def delete_word(rbt_word, tweeted_word):
     
-  #  if bst_word.id == 436685991 :
-  #      print("77 ", bst_word.word, bst_word.id, bst_word.date)
         
-    if bst_word == None :
+    if rbt_word == None :
         return None
         
-    if bst_word.word < tweeted_word :
-        if bst_word.right == None :
-            delete_word(bst_word.left, tweeted_word)
+    if rbt_word.word < tweeted_word :
+        if rbt_word.right == None :
+            delete_word(rbt_word.left, tweeted_word)
         else :
-            delete_word(bst_word.right, tweeted_word)
+            delete_word(rbt_word.right, tweeted_word)
 
-    elif bst_word.word == tweeted_word :
+    elif rbt_word.word == tweeted_word :
 
-        list_word.add(bst_word.id)
-        node_delete = bst_word    
+        list_word.add(rbt_word.id)
+        node_delete = rbt_word    
         delete_node(node_delete)
 
-        if bst_word.right == None :
-            delete_word(bst_word.left, tweeted_word)
+        if rbt_word.right == None :
+            delete_word(rbt_word.left, tweeted_word)
         else :
-            print("right ", bst_word.right.id, bst_word.right.word)
-            delete_word(bst_word.right, tweeted_word)   
+            delete_word(rbt_word.right, tweeted_word)   
         
-    elif bst_word.word > tweeted_word :
-        if bst_word.left == None :
-            delete_word(bst_word.right, tweeted_word)
+    elif rbt_word.word > tweeted_word :
+        if rbt_word.left == None :
+            delete_word(rbt_word.right, tweeted_word)
         else :
-            delete_word(bst_word.left, tweeted_word)
+            delete_word(rbt_word.left, tweeted_word)
         
 
 def menu6():
@@ -1008,54 +1383,52 @@ def menu6():
     print("Input a word:")
     tweeted_word = input()
     
-    delete_word(bst_word.root, tweeted_word)
-    print("complete")
+    delete_word(rbt_word.root, tweeted_word)
+    print("Delete complete (", tweeted_word, ")")
 
-    list_word.print()
-  #  bst_word.print_tree()
     
 
 def delete_list_user(node_delete_user):
-    bst_user.delete(node_delete_user)
+    rbt_user.delete(node_delete_user)
 
-def delete_user(bst_user, list_word):
-    if bst_user == None :
+def delete_user(rbt_user, list_word):
+    if rbt_user == None :
         return 0
-    if bst_user.id < list_word.val :
-        delete_user(bst_user.right, list_word)
-    elif bst_user.id == list_word.val :
-        list_word_friend.add(bst_user.id)
-        node_delete_user = bst_user
+    if rbt_user.id < list_word.val :
+        delete_user(rbt_user.right, list_word)
+    elif rbt_user.id == list_word.val :
+        list_word_friend.add(rbt_user.id)
+        node_delete_user = rbt_user
         delete_list_user(node_delete_user)
-    elif bst_user.id > list_word.val :
-        delete_user(bst_user.left, list_word)
+    elif rbt_user.id > list_word.val :
+        delete_user(rbt_user.left, list_word)
         
 def delete_list_word(list_word):
     if list_word != None :
-        delete_user(bst_user.root, list_word)
+        delete_user(rbt_user.root, list_word)
         delete_list_word(list_word.next)
         
 
 def delete_list_friend_id(node_delete_friend):
-    bst_friend.delete(node_delete_friend)
+    rbt_friend.delete(node_delete_friend)
 
-def delete_friend_id(bst_friend, list_word_friend):
-    if bst_friend == None :
+def delete_friend_id(rbt_friend, list_word_friend):
+    if rbt_friend == None :
         return 0
-    if bst_friend.id < list_word_friend.val :
-        delete_friend_id(bst_friend.right, list_word_friend)
-    elif bst_friend.id == list_word_friend.val :
-        node_delete_friend = bst_friend
+    if rbt_friend.id < list_word_friend.val :
+        delete_friend_id(rbt_friend.right, list_word_friend)
+    elif rbt_friend.id == list_word_friend.val :
+        node_delete_friend = rbt_friend
         delete_list_friend_id(node_delete_friend)
 
-        if bst_friend.right == None :
-            delete_friend_id(bst_friend.left, list_word_friend)  
-        if bst_friend.left == None :
-            delete_friend_id(bst_friend.right, list_word_friend)
+        if rbt_friend.right == None :
+            delete_friend_id(rbt_friend.left, list_word_friend)  
+        if rbt_friend.left == None :
+            delete_friend_id(rbt_friend.right, list_word_friend)
 
         
-    elif bst_friend.id > list_word_friend.val :
-        delete_friend_id(bst_friend.left, list_word_friend)
+    elif rbt_friend.id > list_word_friend.val :
+        delete_friend_id(rbt_friend.left, list_word_friend)
 
 
 
@@ -1067,22 +1440,22 @@ def delete_friend_id(bst_friend, list_word_friend):
 
 def delete_friend(list_word_friend):
     if list_word_friend != None :
-        delete_friend_id(bst_friend.root, list_word_friend)
+        delete_friend_id(rbt_friend.root, list_word_friend)
         delete_friend(list_word_friend.next)
 
 def delete_list_friend_friendid(node_delete_friend):
-    bst_friend.delete(node_delete_friend)
+    rbt_friend.delete(node_delete_friend)
 
 
-def delete_friend_id(bst_friend, list_word_friend):
-    if(bst_friend.right):
-        delete_friend_id(bst_friend.right, list_word_friend)
+def delete_friend_id(rbt_friend, list_word_friend):
+    if(rbt_friend.right):
+        delete_friend_id(rbt_friend.right, list_word_friend)
     
-    if bst_friend.friend_id == list_word_friend.val :
-        node_delete_friend = bst_friend
+    if rbt_friend.friend_id == list_word_friend.val :
+        node_delete_friend = rbt_friend
         delete_list_friend_friendid(node_delete_friend)    
-    if(bst_friend.left):
-        delete_friend_id(bst_friend.left, list_word_friend)
+    if(rbt_friend.left):
+        delete_friend_id(rbt_friend.left, list_word_friend)
 
 
 
@@ -1095,16 +1468,13 @@ def menu7():
     print("Delete all users who mentioned a word")
     delete_list_word(list_word.first)
     print("Complete.\n")
-    print("Deleting (the id in the friend tree == the id in the user tree)...")
+    print("Deleting the nodes in the friend tree (the id in the friend tree == the id in the user tree)...")
     delete_friend(list_word_friend.first)
     print("Complete.\n")
-    print("Deleting (the friend_id in the friend tree == the id in the user tree)...")
+    print("Deleting the nodes in the friend tree (the friend_id in the friend tree == the id in the user tree)...")
     delete_friendid(list_word_friend.first)    
     print("Complete.\n")
 
-
-# global array_count8
-# array_count8 = 0
 
 
         
@@ -1113,61 +1483,61 @@ def menu7():
 
 array_count_friend_id = 0
 
-def array_init7(bst_friend):
+def array_init7(rbt_friend):
     global array_count
-    if (bst_friend.right):
-        array_init(bst_friend.right)
+    if (rbt_friend.right):
+        array_init(rbt_friend.right)
     dup_check = 0
     for i in range(len(vertices_friend)):
         print("88 ", i)
         if vertices_friend[array_count-1] == None :
             print("88888")
             continue
-        if vertices_friend[array_count].name == bst_friend.id :
-            print("7 ", bst_friend.id )
-    vertices_friend[array_count] = Int_Vertex_Friend(bst_friend.id)
+        if vertices_friend[array_count].name == rbt_friend.id :
+            print("7 ", rbt_friend.id )
+    vertices_friend[array_count] = Int_Vertex_Friend(rbt_friend.id)
     array_count += 1
-    if (bst_friend.left):
-        array_init(bst_friend.left)
+    if (rbt_friend.left):
+        array_init(rbt_friend.left)
 
 
-def array_init_friend_id(bst_friend):
+def array_init_friend_id(rbt_friend):
     global array_count_friend_id
-    if (bst_friend.right):
-        array_init_friend_id(bst_friend.right)
+    if (rbt_friend.right):
+        array_init_friend_id(rbt_friend.right)
 
-    vertices_friend_friend_id[array_count_friend_id] = Int_Vertex_Friend(bst_friend.friend_id)
+    vertices_friend_friend_id[array_count_friend_id] = Int_Vertex_Friend(rbt_friend.friend_id)
     array_count_friend_id += 1
    # print("78   ", array_count_friend_id, vertices_friend_friend_id[array_count_friend_id-1].name)    
-    if (bst_friend.left):
-        array_init_friend_id(bst_friend.left)
+    if (rbt_friend.left):
+        array_init_friend_id(rbt_friend.left)
         
 
-def vertices_add(bst_friend, vertices_user):
-    if (bst_friend.right):
-        vertices_add(bst_friend.right, vertices_user)
+def vertices_add(rbt_friend, vertices_user):
+    if (rbt_friend.right):
+        vertices_add(rbt_friend.right, vertices_user)
         
     for i in range(len(vertices_user)):
-        if(bst_friend.id == vertices_user[i].id):
+        if(rbt_friend.id == vertices_user[i].id):
             for j in range(len(vertices_user)):
-                if(bst_friend.friend_id == vertices_user[j].id):
+                if(rbt_friend.friend_id == vertices_user[j].id):
                     vertices_user[i].add(vertices_user[j])
 
-    if (bst_friend.left):
-        vertices_add(bst_friend.left, vertices_user)
+    if (rbt_friend.left):
+        vertices_add(rbt_friend.left, vertices_user)
 
 
 
-def array_init(bst_user):
+def array_init(rbt_user):
     global array_count8
-    if (bst_user.right):
-        array_init(bst_user.right)
+    if (rbt_user.right):
+        array_init(rbt_user.right)
 
-    vertices_user[array_count8] = bst_user
+    vertices_user[array_count8] = rbt_user
     vertices_user[array_count8].n = array_count8
     array_count8 = array_count8+1
-    if (bst_user.left):
-        array_init(bst_user.left)
+    if (rbt_user.left):
+        array_init(rbt_user.left)
         
 
 def menu8():
@@ -1180,18 +1550,120 @@ def menu8():
 
     vertices_user = [None]*user_number
     
-    array_init(bst_user.root)
+    array_init(rbt_user.root)
     DFS = DepthFirstSearch()
     DFS.set_vertices(vertices_user)
 
 
-    vertices_add(bst_friend.root, vertices_user)
+    vertices_add(rbt_friend.root, vertices_user)
 
 
-  #  DFS.dfs()
     DFS.scc()
-    DFS.print_vertices()
+   # DFS.print_vertices()
 
+
+     
+
+
+
+def array_init9(rbt_user):
+    global array_count9
+    if (rbt_user.right):
+        array_init9(rbt_user.right)
+
+    vertices_user9[array_count9] = rbt_user.id
+    array_count9 = array_count9+1
+    if (rbt_user.left):
+        array_init9(rbt_user.left)
+        
+
+def add_friend(rbt_friend, v):
+    print(rbt_friend.id, v.name)
+    if rbt_friend == None :
+        return 0
+    if rbt_friend.id < v.name :
+        add_friend(rbt_friend.right, v)
+    elif rbt_friend.id == v.name :
+        print(8)
+    elif rbt_friend.id < v.name :
+        add_friend(rbt_friend.right, v)
+
+        
+def vertices_add9(rbt_friend, vertices_user9): 
+    if (rbt_friend.right):
+        vertices_add9(rbt_friend.right, vertices_user9)
+        
+    for i in range(len(vertices_user9)):
+        if(rbt_friend.id == vertices_user9[i]):
+            for j in range(len(vertices_user9)):
+                if(rbt_friend.friend_id == vertices_user9[j]):
+                    v[i].add(v[j], 1)
+                #    print(v[i], " 888 ",  vertices_user9[j])
+
+
+    if (rbt_friend.left):
+        vertices_add9(rbt_friend.left, vertices_user9)
+        
+    
+def menu9():
+    print("Find shortest path from a given user")
+
+    global array_count9
+    array_count9 = 0
+
+    global vertices_user9
+    global v
+
+    vertices_user9 = [0 for i in range(user_number)]
+    v = [0 for i in range(user_number)]
+
+    array_init9(rbt_user.root)
+
+    print("Input a start user id:")
+    given_user = input()
+    given_user_i = -1
+    g = Dijkstra()
+    for i in range(len(vertices_user9)):
+        v[i] = g.add_vertex(vertices_user9[i])
+        if vertices_user9[i] == int(given_user) :
+            given_user_i = i
+
+    if given_user_i == -1 :
+        print("입력하신 user id 가 존재하지 않습니다.")
+        return 0
+        
+
+
+        
+    vertices_add9(rbt_friend.root, vertices_user9)
+
+
+    v[given_user_i].d = 0
+
+  #  given_user = 
+
+
+
+
+
+
+#        p = self.vertices[n].first
+ #       while p:
+  #          print (p.n.name, end = ' ')
+
+            
+    
+  #  g.print_vertices()
+    g.shortest_path()
+    g.print_vertices()
+    
+ #   add_friend(rbt_friend.root, v[0])
+ #   vertices_add(rbt_friend.root, vertices_user9)
+
+        
+
+
+        
 
     
 def main():
@@ -1207,6 +1679,10 @@ def main():
             menu1()
         elif menu_input == "2":
             menu2()
+
+        elif menu_input == "21":
+            menu21()
+            
         elif menu_input == "3":
             menu3()
         elif menu_input == "4":
