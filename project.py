@@ -1243,6 +1243,7 @@ def find_user_name(rbt_user, list_user_mentioned) :
         find_user_name(rbt_user.left, list_user_mentioned)
     
 def find_user_mentioned(rbt_word, tweeted_word):
+# tweet 한 user를 rbt에서 O(log n)의 시간 복잡도로 검색
     if rbt_word == None :
         return 1
     if rbt_word.word < tweeted_word :
@@ -1283,7 +1284,7 @@ def menu4():
             return 1
 
 def find_list_user_friend(rbt_friend, list_user_mentioned) :
-
+    # rbt에서 O(log n)의 시간 복잡도로 검색
     if rbt_friend == None :
         return None
     elif rbt_friend.id < list_user_mentioned.val :
@@ -1355,28 +1356,22 @@ def delete_node(node_delete) :
     rbt_word.delete(node_delete)
 
 def delete_word(rbt_word, tweeted_word):
-    
-        
+    # rbt 를 시간복잡도 O(log n)으로 검색해서 삭제
     if rbt_word == None :
         return None
-        
     if rbt_word.word < tweeted_word :
         if rbt_word.right == None :
             delete_word(rbt_word.left, tweeted_word)
         else :
             delete_word(rbt_word.right, tweeted_word)
-
     elif rbt_word.word == tweeted_word :
-
         list_word.add(rbt_word.id)
         node_delete = rbt_word    
         delete_node(node_delete)
-
         if rbt_word.right == None :
             delete_word(rbt_word.left, tweeted_word)
         else :
             delete_word(rbt_word.right, tweeted_word)   
-        
     elif rbt_word.word > tweeted_word :
         if rbt_word.left == None :
             delete_word(rbt_word.right, tweeted_word)
@@ -1420,6 +1415,7 @@ def delete_list_friend_id(node_delete_friend):
     rbt_friend.delete(node_delete_friend)
 
 def delete_friend_id(rbt_friend, list_word_friend):
+    # rbt 를 시간복잡도 O(log n)으로 검색해서 삭제
     if rbt_friend == None :
         return 0
     if rbt_friend.id < list_word_friend.val :
@@ -1427,13 +1423,10 @@ def delete_friend_id(rbt_friend, list_word_friend):
     elif rbt_friend.id == list_word_friend.val :
         node_delete_friend = rbt_friend
         delete_list_friend_id(node_delete_friend)
-
         if rbt_friend.right == None :
             delete_friend_id(rbt_friend.left, list_word_friend)  
         if rbt_friend.left == None :
             delete_friend_id(rbt_friend.right, list_word_friend)
-
-        
     elif rbt_friend.id > list_word_friend.val :
         delete_friend_id(rbt_friend.left, list_word_friend)
 
@@ -1515,7 +1508,6 @@ def array_init_friend_id(rbt_friend):
 
     vertices_friend_friend_id[array_count_friend_id] = Int_Vertex_Friend(rbt_friend.friend_id)
     array_count_friend_id += 1
-   # print("78   ", array_count_friend_id, vertices_friend_friend_id[array_count_friend_id-1].name)    
     if (rbt_friend.left):
         array_init_friend_id(rbt_friend.left)
         
@@ -1566,7 +1558,6 @@ def menu8():
 
 
     DFS.scc()
-   # DFS.print_vertices()
 
 
      
